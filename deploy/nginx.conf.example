@@ -1,0 +1,49 @@
+## Exemplo de configuração Nginx para o Reels Imobiliário
+## Copie para /etc/nginx/sites-available/reels-imobiliario.conf e ajuste
+## domínio, caminhos de certificado e diretório do frontend.
+
+# --- Redireciona HTTP para HTTPS ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name reels.seudominio.com.br;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name reels.seudominio.com.br;
+
+    ssl_certificate     /etc/letsencrypt/live/reels.seudominio.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/reels.seudominio.com.br/privkey.pem;
+
+    # Uploads de fotos podem ser grandes (várias fotos por lote)
+    client_max_body_size 100M;
+
+    # --- Frontend estático (HTML/JS/CSS puro) ---
+    root /opt/reels-imobiliario/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # --- API (proxy para o Gunicorn/Uvicorn rodando via systemd) ---
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Geração de vídeo pode demorar; evite timeout prematuro
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    access_log /var/log/nginx/reels-imobiliario.access.log;
+    error_log  /var/log/nginx/reels-imobiliario.error.log;
+}

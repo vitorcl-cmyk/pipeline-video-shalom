@@ -1,0 +1,28 @@
+[Unit]
+Description=Reels Imobiliario API (FastAPI + Gunicorn/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/reels-imobiliario/backend
+EnvironmentFile=/opt/reels-imobiliario/backend/.env
+ExecStart=/opt/reels-imobiliario/backend/.venv/bin/gunicorn app.main:app \
+    --workers 3 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout 300 \
+    --access-logfile - \
+    --error-logfile -
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+# Sandbox básico (ajuste os paths conforme sua instalação)
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/reels-imobiliario/backend/storage /opt/reels-imobiliario/backend/app.db
+
+[Install]
+WantedBy=multi-user.target

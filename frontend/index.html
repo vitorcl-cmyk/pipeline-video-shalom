@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reels Imobiliário — Vídeos Cinematográficos</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">🎬 Reels Imobiliário</div>
+  <div id="userBox" class="user-box hidden">
+    <span id="userEmail"></span>
+    <button id="logoutBtn" class="btn btn-ghost">Sair</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ---------- AUTENTICAÇÃO ---------- -->
+  <section id="authSection" class="card auth-card">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="login">Entrar</button>
+      <button class="tab-btn" data-tab="register">Criar conta</button>
+    </div>
+
+    <form id="loginForm" class="tab-panel active">
+      <label>E-mail
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label>Senha
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+      <p class="form-error" data-for="loginForm"></p>
+    </form>
+
+    <form id="registerForm" class="tab-panel">
+      <label>Nome
+        <input type="text" name="full_name" autocomplete="name" />
+      </label>
+      <label>E-mail
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label>Senha (mín. 8 caracteres)
+        <input type="password" name="password" required minlength="8" autocomplete="new-password" />
+      </label>
+      <button type="submit" class="btn btn-primary">Criar conta</button>
+      <p class="form-error" data-for="registerForm"></p>
+    </form>
+  </section>
+
+  <!-- ---------- APP (logado) ---------- -->
+  <section id="appSection" class="hidden">
+
+    <div class="card">
+      <div class="usage-row">
+        <h2>Novo vídeo</h2>
+        <span id="usageBadge" class="badge">-- / -- hoje</span>
+      </div>
+
+      <form id="uploadForm">
+        <label>Fotos do imóvel (selecione várias, ordem = ordem no vídeo)
+          <input type="file" id="photosInput" name="photos" accept="image/jpeg,image/png,image/webp" multiple required />
+        </label>
+        <div id="photoPreview" class="photo-preview"></div>
+
+        <label>Estilo do vídeo
+          <select name="style" id="styleSelect">
+            <option value="classico">Clássico — elegante, cores quentes, zoom suave</option>
+            <option value="moderno">Moderno — dinâmico, contraste alto, transições rápidas</option>
+            <option value="suave">Suave — sutil, tons pastel, ritmo calmo</option>
+          </select>
+        </label>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">Gerar vídeo</button>
+        <p class="form-error" data-for="uploadForm"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="usage-row">
+        <h2>Meus vídeos</h2>
+        <button id="refreshBtn" class="btn btn-ghost">Atualizar</button>
+      </div>
+      <div id="jobsList" class="jobs-list">
+        <p class="empty-state">Nenhum vídeo gerado ainda.</p>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Reels Imobiliário — geração de vídeos com FFmpeg</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
