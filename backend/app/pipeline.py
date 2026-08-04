@@ -33,7 +33,8 @@ VIDEO_HEIGHT = 1920
 FPS = 30
 SECONDS_PER_PHOTO = 4.0
 CROSSFADE_DURATION = 1.0
-UPSCALE_FACTOR = 3  # amostra em resolução maior antes do zoompan, evita "chacoalhar"
+UPSCALE_FACTOR = 1.5  # amostra em resolução maior antes do zoompan, evita "chacoalhar"
+# (valores acima de ~1.5 custam muito tempo de CPU no zoompan para ganho de suavidade marginal)
 
 
 class PipelineError(RuntimeError):
@@ -81,7 +82,7 @@ STYLES: dict[str, StyleConfig] = {
         transition="dissolve",
         music_freqs=[261.63, 329.63, 392.00],   # tríade de Dó maior (C-E-G)
         music_weights=[1.0, 0.65, 0.5],
-        music_tempo=0.08,
+        music_tempo=0.12,  # filtro `tremolo` do ffmpeg exige f >= 0.1
     ),
 }
 
@@ -120,8 +121,8 @@ def _render_ken_burns_clip(photo_path: Path, clip_path: Path, style: StyleConfig
     zoom_step = (style.zoom_max - 1.0) / frames
 
     x_expr, y_expr = _pan_expressions(index, frames)
-    upscale_w = VIDEO_WIDTH * UPSCALE_FACTOR
-    upscale_h = VIDEO_HEIGHT * UPSCALE_FACTOR
+    upscale_w = int(VIDEO_WIDTH * UPSCALE_FACTOR)
+    upscale_h = int(VIDEO_HEIGHT * UPSCALE_FACTOR)
 
     vf = (
         f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
