@@ -61,9 +61,10 @@
       </div>
 
       <form id="uploadForm">
-        <label>Fotos do imóvel (selecione várias, ordem = ordem no vídeo)
-          <input type="file" id="photosInput" name="photos" accept="image/jpeg,image/png,image/webp" multiple required />
+        <label>Fotos do imóvel (até 20 fotos, 15MB cada)
+          <input type="file" id="photosInput" name="photos" accept="image/jpeg,image/png,image/webp" multiple />
         </label>
+        <p id="photoHint" class="hint hidden">Arraste as fotos (ou use as setas) para definir a ordem no vídeo.</p>
         <div id="photoPreview" class="photo-preview"></div>
 
         <label>Estilo do vídeo

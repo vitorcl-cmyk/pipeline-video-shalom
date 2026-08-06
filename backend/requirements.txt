@@ -1,15 +1,17 @@
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
 sqlalchemy==2.0.36
-pydantic==2.10.3
-pydantic-settings==2.7.0
+# Unpinned (>=): pydantic-core needs a prebuilt wheel for the target Python
+# version (it's a Rust extension); older pinned versions have no wheel for
+# newer interpreters (e.g. 3.14) and fail trying to compile from source.
+pydantic>=2.10
+pydantic-settings>=2.7
 python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-# Pin: passlib 1.7.4 (unmaintained) probes bcrypt internals in a way that
-# raises ValueError on bcrypt>=4.1 (which rejects >72-byte test strings
-# instead of truncating). Keep bcrypt pinned below that until passlib is
-# updated/replaced.
-bcrypt==4.0.1
+# bcrypt used directly (see app/auth.py) instead of via passlib: passlib is
+# unmaintained and its bcrypt backend self-test breaks on newer bcrypt
+# releases. Unpinned so pip can pick a version with a prebuilt wheel for
+# whatever Python is installed.
+bcrypt>=4.0
 python-multipart==0.0.20
 email-validator==2.2.0
 gunicorn==23.0.0

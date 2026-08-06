@@ -5,8 +5,11 @@
   const API_BASE = window.APP_CONFIG.API_BASE_URL;
   const TOKEN_KEY = "reels_token";
   const EMAIL_KEY = "reels_email";
+  const MAX_PHOTOS = 20;
 
   let pollTimer = null;
+  let selectedFiles = [];
+  let dragFromIndex = null;
 
   // ---------------- DOM refs ----------------
   const authSection = document.getElementById("authSection");
@@ -21,6 +24,7 @@
 
   const photosInput = document.getElementById("photosInput");
   const photoPreview = document.getElementById("photoPreview");
+  const photoHint = document.getElementById("photoHint");
   const submitBtn = document.getElementById("submitBtn");
   const usageBadge = document.getElementById("usageBadge");
   const jobsList = document.getElementById("jobsList");
@@ -152,35 +156,145 @@
     renderAuthState();
   });
 
-  // ---------------- Upload de fotos ----------------
-  photosInput.addEventListener("change", () => {
+  // ---------------- Upload de fotos (prévia + reordenação) ----------------
+  function addFiles(fileList) {
+    const incoming = Array.from(fileList || []);
+    let rejected = 0;
+    for (const file of incoming) {
+      if (selectedFiles.length >= MAX_PHOTOS) {
+        rejected += 1;
+        continue;
+      }
+      selectedFiles.push({ file, url: URL.createObjectURL(file) });
+    }
+    photosInput.value = ""; // permite selecionar o mesmo arquivo de novo depois
+    if (rejected > 0) {
+      showError(uploadForm, `Máximo de ${MAX_PHOTOS} fotos por vídeo. ${rejected} foto(s) não adicionada(s).`);
+    } else {
+      showError(uploadForm, "");
+    }
+    renderPhotoPreview();
+  }
+
+  function removeFileAt(index) {
+    const [removed] = selectedFiles.splice(index, 1);
+    if (removed) URL.revokeObjectURL(removed.url);
+    renderPhotoPreview();
+  }
+
+  function moveFile(index, delta) {
+    const target = index + delta;
+    if (target < 0 || target >= selectedFiles.length) return;
+    const [item] = selectedFiles.splice(index, 1);
+    selectedFiles.splice(target, 0, item);
+    renderPhotoPreview();
+  }
+
+  function reorderFiles(fromIndex, toIndex) {
+    if (Number.isNaN(fromIndex) || fromIndex === toIndex) return;
+    const [item] = selectedFiles.splice(fromIndex, 1);
+    selectedFiles.splice(toIndex, 0, item);
+    renderPhotoPreview();
+  }
+
+  function clearSelectedFiles() {
+    selectedFiles.forEach((item) => URL.revokeObjectURL(item.url));
+    selectedFiles = [];
+    renderPhotoPreview();
+  }
+
+  function renderPhotoPreview() {
     photoPreview.innerHTML = "";
-    const files = Array.from(photosInput.files || []);
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = document.createElement("img");
-        img.src = reader.result;
-        img.alt = file.name;
-        photoPreview.appendChild(img);
-      };
-      reader.readAsDataURL(file);
+    photoHint.classList.toggle("hidden", selectedFiles.length === 0);
+
+    selectedFiles.forEach((item, index) => {
+      const card = document.createElement("div");
+      card.className = "photo-card";
+      card.draggable = true;
+      card.dataset.index = String(index);
+
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.alt = item.file.name;
+      card.appendChild(img);
+
+      const order = document.createElement("span");
+      order.className = "photo-order";
+      order.textContent = String(index + 1);
+      card.appendChild(order);
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "photo-remove";
+      removeBtn.textContent = "×";
+      removeBtn.setAttribute("aria-label", `Remover foto ${index + 1}`);
+      removeBtn.addEventListener("click", () => removeFileAt(index));
+      card.appendChild(removeBtn);
+
+      const moveRow = document.createElement("div");
+      moveRow.className = "photo-move-row";
+
+      const leftBtn = document.createElement("button");
+      leftBtn.type = "button";
+      leftBtn.className = "photo-move-btn";
+      leftBtn.textContent = "◀";
+      leftBtn.disabled = index === 0;
+      leftBtn.setAttribute("aria-label", "Mover para trás");
+      leftBtn.addEventListener("click", () => moveFile(index, -1));
+
+      const rightBtn = document.createElement("button");
+      rightBtn.type = "button";
+      rightBtn.className = "photo-move-btn";
+      rightBtn.textContent = "▶";
+      rightBtn.disabled = index === selectedFiles.length - 1;
+      rightBtn.setAttribute("aria-label", "Mover para frente");
+      rightBtn.addEventListener("click", () => moveFile(index, 1));
+
+      moveRow.appendChild(leftBtn);
+      moveRow.appendChild(rightBtn);
+      card.appendChild(moveRow);
+
+      card.addEventListener("dragstart", () => {
+        dragFromIndex = index;
+        card.classList.add("dragging");
+      });
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+      });
+      card.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        card.classList.add("drag-over");
+      });
+      card.addEventListener("dragleave", () => {
+        card.classList.remove("drag-over");
+      });
+      card.addEventListener("drop", (e) => {
+        e.preventDefault();
+        card.classList.remove("drag-over");
+        reorderFiles(dragFromIndex, index);
+        dragFromIndex = null;
+      });
+
+      photoPreview.appendChild(card);
     });
+  }
+
+  photosInput.addEventListener("change", () => {
+    addFiles(photosInput.files);
   });
 
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     showError(uploadForm, "");
 
-    const files = photosInput.files;
-    if (!files || files.length === 0) {
+    if (selectedFiles.length === 0) {
       showError(uploadForm, "Selecione ao menos uma foto");
       return;
     }
 
     const formData = new FormData();
     formData.append("style", document.getElementById("styleSelect").value);
-    Array.from(files).forEach((file) => formData.append("photos", file));
+    selectedFiles.forEach((item) => formData.append("photos", item.file));
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
@@ -188,7 +302,7 @@
     try {
       await api("/jobs", { method: "POST", body: formData });
       uploadForm.reset();
-      photoPreview.innerHTML = "";
+      clearSelectedFiles();
       await loadJobs();
       await loadUsage();
     } catch (err) {
