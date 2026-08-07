@@ -258,7 +258,7 @@ def generate_video(photo_paths: list[Path], style_key: str, output_path: Path) -
     style = STYLES.get(style_key, STYLES[DEFAULT_STYLE])
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.TemporaryDirectory(prefix="reel_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="reel_", dir=settings.TEMP_DIR) as tmp:
         tmp_dir = Path(tmp)
         clip_paths: list[Path] = []
         for i, photo in enumerate(photo_paths):

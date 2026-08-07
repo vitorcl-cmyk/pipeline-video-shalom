@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     # Storage
     UPLOAD_DIR: Path = BASE_DIR / "storage" / "uploads"
     OUTPUT_DIR: Path = BASE_DIR / "storage" / "outputs"
+    # Intermediate render files (Ken Burns clips, ambient track). Kept on the
+    # same disk as the rest of the app's storage instead of the OS default
+    # temp dir: on many servers /tmp is a small RAM-backed tmpfs, which fills
+    # up fast when rendering several video clips per job.
+    TEMP_DIR: Path = BASE_DIR / "storage" / "tmp"
 
     # Business rules
     DAILY_VIDEO_LIMIT: int = 10
@@ -37,3 +42,4 @@ class Settings(BaseSettings):
 settings = Settings()
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 settings.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+settings.TEMP_DIR.mkdir(parents=True, exist_ok=True)

@@ -12,11 +12,13 @@ env/
 *.db
 *.sqlite3
 
-# Uploaded photos and generated videos
+# Uploaded photos, generated videos, and intermediate render files
 backend/storage/uploads/*
 backend/storage/outputs/*
+backend/storage/tmp/*
 !backend/storage/uploads/.gitkeep
 !backend/storage/outputs/.gitkeep
+!backend/storage/tmp/.gitkeep
 
 # OS / editor
 .DS_Store
