@@ -35,6 +35,8 @@ SECONDS_PER_PHOTO = 4.0
 CROSSFADE_DURATION = 1.0
 UPSCALE_FACTOR = 1.0  # sem supersampling extra antes do zoompan (era o maior custo de CPU)
 FILTER_THREADS = "0"  # "0" = ffmpeg escolhe automaticamente (usa todos os nucleos disponiveis)
+WATERMARK_WIDTH_RATIO = 0.5   # largura da marca d'agua relativa a largura do video
+WATERMARK_OPACITY = 0.55     # 0 = invisivel, 1 = opaca
 
 
 class PipelineError(RuntimeError):
@@ -202,7 +204,7 @@ def _concat_with_crossfade(
     inputs += ["-i", str(audio_path)]
 
     if n == 1:
-        filter_complex = "[0:v]null[vout]"
+        parts = ["[0:v]format=yuv420p[vout]"]
     else:
         parts = []
         current_label = "0:v"
@@ -216,15 +218,27 @@ def _concat_with_crossfade(
             )
             cumulative_duration = offset + SECONDS_PER_PHOTO
             current_label = next_label
-        final_label = current_label
-        parts.append(f"[{final_label}]format=yuv420p[vout]")
-        filter_complex = ";".join(parts)
+        parts.append(f"[{current_label}]format=yuv420p[vout]")
+
+    final_video_label = "vout"
+    if settings.WATERMARK_ENABLED and settings.WATERMARK_PATH.exists():
+        watermark_index = audio_index + 1
+        inputs += ["-i", str(settings.WATERMARK_PATH)]
+        wm_width = int(VIDEO_WIDTH * WATERMARK_WIDTH_RATIO)
+        parts.append(
+            f"[{watermark_index}:v]scale={wm_width}:-1,format=rgba,"
+            f"colorchannelmixer=aa={WATERMARK_OPACITY}[wm]"
+        )
+        parts.append("[vout][wm]overlay=(W-w)/2:(H-h)/2:format=auto[voutwm]")
+        final_video_label = "voutwm"
+
+    filter_complex = ";".join(parts)
 
     args = [
         *inputs,
         "-filter_complex", filter_complex,
         "-filter_complex_threads", FILTER_THREADS,
-        "-map", "[vout]",
+        "-map", f"[{final_video_label}]",
         "-map", f"{audio_index}:a",
         "-c:v", "libx264",
         "-preset", "fast",

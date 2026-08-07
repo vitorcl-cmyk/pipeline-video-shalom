@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     FFMPEG_BINARY: str = "ffmpeg"
     FFPROBE_BINARY: str = "ffprobe"
 
+    # Marca d'agua aplicada nos videos gerados (PNG com transparencia)
+    WATERMARK_PATH: Path = BASE_DIR / "app" / "assets" / "watermark.png"
+    WATERMARK_ENABLED: bool = True
+
     # CORS
     CORS_ORIGINS: list[str] = ["*"]
 
