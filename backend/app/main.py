@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import shutil
+import threading
 import uuid
 from datetime import datetime, time, timezone
 from pathlib import Path
@@ -107,37 +108,45 @@ def _jobs_created_today(db: Session, user_id: str) -> int:
     )
 
 
+# FFmpeg (Ken Burns/xfade) is CPU- and disk-heavy; on a single small server,
+# running more than one render at once causes CPU contention and transient
+# disk-space spikes from concurrent temp files. Serialize renders with a
+# process-wide lock -- jobs stay "pending" while queued behind this.
+_render_lock = threading.Lock()
+
+
 def _process_job(job_id: str) -> None:
     """Executa a geração do vídeo (chamado em background)."""
     from app.database import SessionLocal
 
-    db = SessionLocal()
-    try:
-        job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
-        if job is None:
-            return
-
-        job.status = JobStatus.PROCESSING
-        job.started_at = datetime.now(timezone.utc)
-        db.commit()
-
+    with _render_lock:
+        db = SessionLocal()
         try:
-            photo_paths = [Path(p) for p in job.input_photos]
-            output_path = settings.OUTPUT_DIR / f"{job.id}.mp4"
-            pipeline.generate_video(photo_paths, job.style, output_path)
+            job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+            if job is None:
+                return
 
-            job.output_path = str(output_path)
-            job.status = JobStatus.COMPLETED
-            job.completed_at = datetime.now(timezone.utc)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Falha ao processar job %s", job_id)
-            job.status = JobStatus.FAILED
-            job.error_message = str(exc)[:2000]
-            job.completed_at = datetime.now(timezone.utc)
+            job.status = JobStatus.PROCESSING
+            job.started_at = datetime.now(timezone.utc)
+            db.commit()
 
-        db.commit()
-    finally:
-        db.close()
+            try:
+                photo_paths = [Path(p) for p in job.input_photos]
+                output_path = settings.OUTPUT_DIR / f"{job.id}.mp4"
+                pipeline.generate_video(photo_paths, job.style, output_path)
+
+                job.output_path = str(output_path)
+                job.status = JobStatus.COMPLETED
+                job.completed_at = datetime.now(timezone.utc)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Falha ao processar job %s", job_id)
+                job.status = JobStatus.FAILED
+                job.error_message = str(exc)[:2000]
+                job.completed_at = datetime.now(timezone.utc)
+
+            db.commit()
+        finally:
+            db.close()
 
 
 # ---------------------------------------------------------------------------

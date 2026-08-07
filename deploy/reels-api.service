@@ -9,12 +9,15 @@ Group=www-data
 WorkingDirectory=/opt/reels-imobiliario/backend
 EnvironmentFile=/opt/reels-imobiliario/backend/.env
 ExecStart=/opt/reels-imobiliario/backend/.venv/bin/gunicorn app.main:app \
-    --workers 3 \
+    --workers 1 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind 127.0.0.1:8000 \
     --timeout 300 \
     --access-logfile - \
     --error-logfile -
+# --workers 1: o render de video usa um lock em memoria de processo para
+# rodar um video por vez (evita disputa de CPU/disco); com mais de um
+# worker (processo) esse lock deixa de ser efetivo entre eles.
 Restart=on-failure
 RestartSec=5
 LimitNOFILE=65536
