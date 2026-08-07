@@ -30,11 +30,11 @@ logger = logging.getLogger("pipeline")
 # ---- Parâmetros globais de renderização ----
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
-FPS = 30
+FPS = 24  # zoompan processa 1 frame de swscale por frame de saida; fps menor = bem mais rapido
 SECONDS_PER_PHOTO = 4.0
 CROSSFADE_DURATION = 1.0
-UPSCALE_FACTOR = 1.5  # amostra em resolução maior antes do zoompan, evita "chacoalhar"
-# (valores acima de ~1.5 custam muito tempo de CPU no zoompan para ganho de suavidade marginal)
+UPSCALE_FACTOR = 1.0  # sem supersampling extra antes do zoompan (era o maior custo de CPU)
+FILTER_THREADS = "0"  # "0" = ffmpeg escolhe automaticamente (usa todos os nucleos disponiveis)
 
 
 class PipelineError(RuntimeError):
@@ -68,7 +68,7 @@ STYLES: dict[str, StyleConfig] = {
         key="moderno",
         label="Moderno",
         zoom_max=1.28,
-        eq_filter="eq=saturation=1.28:contrast=1.18:brightness=0.0,unsharp=5:5:0.8:5:5:0.0",
+        eq_filter="eq=saturation=1.28:contrast=1.18:brightness=0.0",
         transition="wipeleft",
         music_freqs=[110.00, 164.81, 220.00, 277.18],  # A2, E3, A3, C#4
         music_weights=[1.0, 0.6, 0.5, 0.35],
@@ -121,13 +121,16 @@ def _render_ken_burns_clip(photo_path: Path, clip_path: Path, style: StyleConfig
     zoom_step = (style.zoom_max - 1.0) / frames
 
     x_expr, y_expr = _pan_expressions(index, frames)
-    upscale_w = int(VIDEO_WIDTH * UPSCALE_FACTOR)
-    upscale_h = int(VIDEO_HEIGHT * UPSCALE_FACTOR)
+    supersample = (
+        f"scale={int(VIDEO_WIDTH * UPSCALE_FACTOR)}:{int(VIDEO_HEIGHT * UPSCALE_FACTOR)},"
+        if UPSCALE_FACTOR > 1.0
+        else ""
+    )
 
     vf = (
         f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
         f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
-        f"scale={upscale_w}:{upscale_h},"
+        f"{supersample}"
         f"zoompan=z='min(zoom+{zoom_step:.6f},{style.zoom_max})':"
         f"x='{x_expr}':y='{y_expr}':d={frames}:s={VIDEO_WIDTH}x{VIDEO_HEIGHT}:fps={FPS},"
         f"{style.eq_filter},"
@@ -139,10 +142,12 @@ def _render_ken_burns_clip(photo_path: Path, clip_path: Path, style: StyleConfig
         "-t", f"{duration}",
         "-i", str(photo_path),
         "-vf", vf,
+        "-filter_threads", FILTER_THREADS,
         "-an",
         "-r", str(FPS),
         "-c:v", "libx264",
-        "-preset", "veryfast",
+        "-preset", "ultrafast",
+        "-threads", "0",
         "-pix_fmt", "yuv420p",
         str(clip_path),
     ]
@@ -218,10 +223,12 @@ def _concat_with_crossfade(
     args = [
         *inputs,
         "-filter_complex", filter_complex,
+        "-filter_complex_threads", FILTER_THREADS,
         "-map", "[vout]",
         "-map", f"{audio_index}:a",
         "-c:v", "libx264",
-        "-preset", "medium",
+        "-preset", "fast",
+        "-threads", "0",
         "-crf", "20",
         "-c:a", "aac",
         "-b:a", "128k",
