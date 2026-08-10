@@ -5,8 +5,12 @@
   --border: #2a2f3a;
   --text: #e9ebf0;
   --text-muted: #9aa1ad;
-  --primary: #7c5cff;
-  --primary-hover: #6a4ce0;
+  /* Laranja da marca Shalom (logo). --primary é uma tonalidade mais escura
+     para manter contraste de texto branco nos botões; --brand-orange é o
+     tom exato da logo, usado em acentos/destaques. */
+  --brand-orange: #f89223;
+  --primary: #cc7a1a;
+  --primary-hover: #b36815;
   --success: #34c58f;
   --warning: #e0a930;
   --danger: #e0554f;
@@ -35,7 +39,10 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-.brand { font-weight: 700; font-size: 1.1rem; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.02em; }
+.brand-icon { height: 26px; width: auto; display: block; }
+.brand-text { color: var(--text); }
+.brand-text-sub { color: var(--brand-orange); font-weight: 500; }
 
 .user-box { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 0.9rem; }
 
@@ -237,7 +244,7 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 }
 
 .status-pending { background: rgba(224, 169, 48, 0.15); color: var(--warning); }
-.status-processing { background: rgba(124, 92, 255, 0.15); color: var(--primary); }
+.status-processing { background: rgba(204, 122, 26, 0.15); color: var(--primary); }
 .status-completed { background: rgba(52, 197, 143, 0.15); color: var(--success); }
 .status-failed { background: rgba(224, 85, 79, 0.15); color: var(--danger); }
 
