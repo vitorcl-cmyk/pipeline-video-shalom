@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shalom Reels — Vídeos Cinematográficos</title>
 <link rel="icon" type="image/png" href="logo-icon.png" />
-<link rel="stylesheet" href="styles.css" />
+<!-- ?v= é uma quebra de cache manual: aumente o número sempre que
+     styles.css/app.js mudar, senão navegadores continuam usando a
+     versão antiga em cache mesmo depois do deploy. -->
+<link rel="stylesheet" href="styles.css?v=2" />
 </head>
 <body>
 
@@ -103,6 +106,6 @@
 </footer>
 
 <script src="config.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
