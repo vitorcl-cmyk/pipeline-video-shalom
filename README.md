@@ -4,6 +4,10 @@ Gera vídeos verticais (estilo Reels/Stories, 1080x1920) a partir de fotos de
 imóveis: efeito Ken Burns por foto, transições crossfade entre elas e uma
 trilha ambiente 100% sintetizada pelo próprio FFmpeg (sem áudio externo).
 
+> Este repositório também contém o **Shalom ADM**, sistema de administração
+> de locação (proprietários, inquilinos, imóveis, contratos) na pasta
+> [`adm/`](adm/README.md) — independente deste pipeline de vídeos.
+
 ## Estrutura do projeto
 
 ```

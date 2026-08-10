@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shalom ADM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ================= AUTH ================= -->
+  <div id="auth-shell" class="auth-shell">
+    <div class="auth-card">
+      <h1>Shalom ADM</h1>
+      <p class="subtitle">Administração de imóveis, proprietários, inquilinos e contratos</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Entrar</button>
+        <button class="tab-btn" data-tab="register">Criar conta</button>
+      </div>
+
+      <form id="login-form">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" type="email" required autocomplete="username" />
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" required autocomplete="current-password" />
+        <div class="error-msg" id="login-error"></div>
+        <button class="btn" type="submit" style="margin-top:16px;width:100%;">Entrar</button>
+      </form>
+
+      <form id="register-form" class="hidden">
+        <label for="reg-name">Nome completo</label>
+        <input id="reg-name" type="text" required />
+        <label for="reg-email">E-mail</label>
+        <input id="reg-email" type="email" required autocomplete="username" />
+        <label for="reg-password">Senha</label>
+        <input id="reg-password" type="password" required minlength="6" autocomplete="new-password" />
+        <div class="error-msg" id="register-error"></div>
+        <button class="btn" type="submit" style="margin-top:16px;width:100%;">Criar conta</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= APP ================= -->
+  <div id="app-shell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">🏠 Shalom ADM</div>
+      <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+      <button class="nav-btn" data-page="owners">👤 Proprietários</button>
+      <button class="nav-btn" data-page="tenants">🧾 Inquilinos</button>
+      <button class="nav-btn" data-page="properties">🏢 Imóveis</button>
+      <button class="nav-btn" data-page="contracts">📄 Contratos</button>
+      <div class="sidebar-footer">
+        <div class="user-box" id="user-box"></div>
+        <button class="btn secondary small" id="logout-btn" style="width:100%;">Sair</button>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <!-- Dashboard -->
+      <section id="page-dashboard" class="page">
+        <div class="page-header"><h1>Dashboard</h1></div>
+        <div class="stat-grid" id="dashboard-stats"></div>
+      </section>
+
+      <!-- Owners -->
+      <section id="page-owners" class="page hidden">
+        <div class="page-header">
+          <h1>Proprietários</h1>
+          <button class="btn" id="owner-new-btn">+ Novo proprietário</button>
+        </div>
+        <div class="search-bar"><input id="owner-search" placeholder="Buscar por nome ou CPF/CNPJ..." /></div>
+        <div class="card"><table id="owners-table">
+          <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <!-- Tenants -->
+      <section id="page-tenants" class="page hidden">
+        <div class="page-header">
+          <h1>Inquilinos</h1>
+          <button class="btn" id="tenant-new-btn">+ Novo inquilino</button>
+        </div>
+        <div class="search-bar"><input id="tenant-search" placeholder="Buscar por nome ou CPF/CNPJ..." /></div>
+        <div class="card"><table id="tenants-table">
+          <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <!-- Properties -->
+      <section id="page-properties" class="page hidden">
+        <div class="page-header">
+          <h1>Imóveis</h1>
+          <button class="btn" id="property-new-btn">+ Novo imóvel</button>
+        </div>
+        <div class="search-bar"><input id="property-search" placeholder="Buscar por endereço, bairro ou cidade..." /></div>
+        <div class="card"><table id="properties-table">
+          <thead><tr><th>Endereço</th><th>Tipo</th><th>Proprietário</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <!-- Contracts -->
+      <section id="page-contracts" class="page hidden">
+        <div class="page-header">
+          <h1>Contratos</h1>
+          <button class="btn" id="contract-new-btn">+ Novo contrato</button>
+        </div>
+        <div class="card"><table id="contracts-table">
+          <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal genérico (reaproveitado por todos os formulários) -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2 id="modal-title"></h2>
+      <form id="modal-form"></form>
+      <div class="error-msg" id="modal-error"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="modal-cancel">Cancelar</button>
+        <button type="submit" form="modal-form" class="btn" id="modal-submit">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

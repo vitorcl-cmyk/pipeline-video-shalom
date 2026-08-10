@@ -1,0 +1,19 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+# Unpinned (>=): 2.0.36's declarative typing resolution breaks on Python
+# 3.14's typing internals (TypeError resolving `Mapped[str | None]`).
+sqlalchemy>=2.0.36
+# Unpinned (>=): pydantic-core needs a prebuilt wheel for the target Python
+# version (it's a Rust extension); older pinned versions have no wheel for
+# newer interpreters (e.g. 3.14) and fail trying to compile from source.
+pydantic>=2.10
+pydantic-settings>=2.7
+python-jose[cryptography]==3.3.0
+# bcrypt used directly (see app/auth.py) instead of via passlib: passlib is
+# unmaintained and its bcrypt backend self-test breaks on newer bcrypt
+# releases. Unpinned so pip can pick a version with a prebuilt wheel for
+# whatever Python is installed.
+bcrypt>=4.0
+python-multipart==0.0.20
+email-validator==2.2.0
+gunicorn==23.0.0
