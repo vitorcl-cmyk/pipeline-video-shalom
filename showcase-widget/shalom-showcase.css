@@ -1,0 +1,116 @@
+/* Shalom Showcase Widget -- estilos base.
+   Namespace `.shalom-showcase*` prefixado pra nao colidir com CSS do
+   host (app de video, Vitrini Imoveis, etc). Cores herdam de variaveis
+   CSS com fallback, pra casar com o tema de cada app que incluir o widget. */
+
+.shalom-showcase {
+  --shalom-showcase-accent: var(--brand-accent, #ff6a00);
+  --shalom-showcase-bg: var(--card-bg, #ffffff);
+  --shalom-showcase-border: var(--card-border, #e6e6e6);
+  --shalom-showcase-text: var(--text-color, #1a1a1a);
+  --shalom-showcase-muted: var(--text-muted, #666666);
+
+  font-family: inherit;
+  color: var(--shalom-showcase-text);
+}
+
+.shalom-showcase-heading {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.shalom-showcase-loading,
+.shalom-showcase-error,
+.shalom-showcase-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--shalom-showcase-muted);
+  border: 1px dashed var(--shalom-showcase-border);
+  border-radius: 12px;
+}
+
+.shalom-showcase-error {
+  color: #b3261e;
+  border-color: #f2c6c2;
+}
+
+.shalom-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.shalom-showcase-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--shalom-showcase-bg);
+  border: 1px solid var(--shalom-showcase-border);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shalom-showcase-card:hover,
+.shalom-showcase-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.shalom-showcase-photo {
+  aspect-ratio: 4 / 3;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.shalom-showcase-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shalom-showcase-body {
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shalom-showcase-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shalom-showcase-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: var(--shalom-showcase-muted);
+}
+
+.shalom-showcase-badge-bairro {
+  background: color-mix(in srgb, var(--shalom-showcase-accent) 15%, white);
+  color: var(--shalom-showcase-accent);
+}
+
+.shalom-showcase-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.shalom-showcase-valor {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--shalom-showcase-accent);
+}

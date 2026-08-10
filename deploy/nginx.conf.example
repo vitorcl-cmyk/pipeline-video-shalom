@@ -29,6 +29,17 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # --- Widget de vitrine reutilizável e JSON gerado pelo scraper ---
+    # (frontend/vitrine.html referencia estes caminhos como absolutos:
+    # /showcase-widget/... e /vitrine-data/...)
+    location /showcase-widget/ {
+        alias /opt/reels-imobiliario/showcase-widget/;
+    }
+
+    location /vitrine-data/ {
+        alias /opt/reels-imobiliario/scraper/data/;
+    }
+
     # --- API (proxy para o Gunicorn/Uvicorn rodando via systemd) ---
     location /api/ {
         proxy_pass http://127.0.0.1:8000/;

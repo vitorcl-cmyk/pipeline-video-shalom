@@ -26,6 +26,13 @@ frontend/
 deploy/
   reels-api.service     # exemplo de unit systemd (gunicorn+uvicorn)
   nginx.conf.example     # exemplo de reverse proxy + frontend estático
+  shalom-scraper.service/.timer  # exemplo de unit/timer para o scraper
+showcase-widget/
+  shalom-showcase.js     # widget de vitrine reutilizável (vanilla JS)
+  shalom-showcase.css
+scraper/
+  scrape_shalom.py        # scraper periódico -> data/listings.json
+  data/listings.sample.json  # fixture de exemplo para demo/dev
 ```
 
 ## Pré-requisitos
@@ -154,6 +161,23 @@ sudo systemctl reload nginx
   dependência Python).
 - Faça backup periódico do diretório `backend/storage/outputs` (vídeos
   gerados) e do banco de dados.
+
+## Vitrine de imóveis (widget reutilizável)
+
+Além do gerador de vídeos, o repo inclui um widget de vitrine de imóveis
+(foto, bairro, tipo, valor, link) pensado pra ser plugado neste app, no app
+de vídeo e na Vitrini Imóveis:
+
+- **`/scraper`** — raspa periodicamente shalomconsultoria.com.br e gera um
+  JSON estático (`data/listings.json`). Veja `scraper/README.md` — os
+  seletores CSS precisam de uma calibração contra o HTML real do site antes
+  do primeiro uso em produção.
+- **`/showcase-widget`** — o widget em si (vanilla JS + CSS, sem
+  dependências), que lê esse JSON e renderiza os cards, com suporte a
+  filtro contextual por bairro (ex.: o bairro pesquisado numa ferramenta de
+  ITBI). Veja `showcase-widget/README.md`.
+- **`frontend/vitrine.html`** — demo do widget rodando dentro deste app
+  (link "Vitrine de imóveis" no topo da página principal).
 
 ## Endpoints principais
 

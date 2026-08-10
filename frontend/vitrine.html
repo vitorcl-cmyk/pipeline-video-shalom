@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vitrine de Imóveis — Shalom</title>
+<link rel="icon" type="image/png" href="logo-icon.png" />
+<link rel="stylesheet" href="styles.css?v=2" />
+<link rel="stylesheet" href="/showcase-widget/shalom-showcase.css" />
+<style>
+  /* Casa as variáveis do widget reutilizável com o tema deste app (dark,
+     laranja Shalom) -- é o único ajuste necessário pra plugar o widget
+     num app com tema próprio. */
+  .shalom-showcase {
+    --shalom-showcase-accent: var(--brand-orange);
+    --shalom-showcase-bg: var(--surface);
+    --shalom-showcase-border: var(--border);
+    --shalom-showcase-text: var(--text);
+    --shalom-showcase-muted: var(--text-muted);
+  }
+  .shalom-showcase-badge { background: var(--surface-2); }
+
+  .vitrine-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .vitrine-controls label { font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+  .vitrine-controls select {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .vitrine-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="logo-icon.png" alt="Shalom" class="brand-icon" />
+    <span class="brand-text">SHALOM <span class="brand-text-sub">Vitrine</span></span>
+  </div>
+  <a href="index.html" class="btn btn-ghost">← Reels</a>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2>Vitrine de imóveis</h2>
+    <p class="hint">
+      Demonstração do widget reutilizável (<code>/showcase-widget</code>): a
+      mesma vitrine que pode ser plugada no app de vídeo e na Vitrini
+      Imóveis. O seletor de bairro abaixo simula o filtro contextual que uma
+      ferramenta de consulta de ITBI dispararia depois de uma busca.
+    </p>
+    <p class="hint">
+      Esta página usa caminhos absolutos (<code>/showcase-widget/...</code>,
+      <code>/vitrine-data/...</code>) que assumem o domínio inteiro do
+      projeto servido por trás de um único host — é assim que
+      <code>deploy/nginx.conf.example</code> está configurado. Pra testar
+      localmente, sirva a partir da raiz do repositório (não de
+      <code>frontend/</code>): <code>python -m http.server 5500</code> na
+      raiz e abra <code>http://localhost:5500/frontend/vitrine.html</code>.
+    </p>
+
+    <div class="vitrine-controls">
+      <label>
+        Bairro pesquisado (simulação de contexto ITBI)
+        <select id="bairroSelect">
+          <option value="">Todos os bairros</option>
+          <option value="Boa Viagem">Boa Viagem</option>
+          <option value="Casa Forte">Casa Forte</option>
+          <option value="Derby">Derby</option>
+          <option value="Piedade">Piedade</option>
+        </select>
+      </label>
+    </div>
+
+    <div
+      id="vitrineWidget"
+      data-shalom-showcase
+      data-json-url="/vitrine-data/listings.sample.json"
+      data-empty-message="Nenhum imóvel encontrado nesse bairro."
+    ></div>
+
+    <p class="vitrine-note">
+      Dados de exemplo (<code>scraper/data/listings.sample.json</code>,
+      publicado em <code>/vitrine-data/</code> pelo Nginx). Em produção,
+      aponte <code>data-json-url</code> para o <code>listings.json</code>
+      real, gerado pelo scraper periódico (<code>/scraper</code>).
+    </p>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>Shalom Consultoria Imobiliária — vitrine de imóveis</p>
+</footer>
+
+<script src="/showcase-widget/shalom-showcase.js"></script>
+<script>
+  document.getElementById("bairroSelect").addEventListener("change", function (e) {
+    ShalomShowcase.setBairroGlobal(e.target.value);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Shalom Showcase Scraper (shalomconsultoria.com.br -> listings.json)
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/reels-imobiliario/scraper
+ExecStart=/opt/reels-imobiliario/scraper/.venv/bin/python scrape_shalom.py \
+    --output /opt/reels-imobiliario/scraper/data/listings.json
+
+# Sandbox básico (ajuste os paths conforme sua instalação)
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/reels-imobiliario/scraper/data

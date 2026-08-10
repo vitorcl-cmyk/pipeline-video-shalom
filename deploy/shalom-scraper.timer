@@ -1,0 +1,10 @@
+[Unit]
+Description=Roda o Shalom Showcase Scraper periodicamente
+
+[Timer]
+# A cada 6h. Ajuste conforme a frequência de atualização dos imóveis no site.
+OnCalendar=*-*-* 0/6:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

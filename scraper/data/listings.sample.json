@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-08-01T09:00:00+00:00",
+  "source": "https://www.shalomconsultoria.com.br",
+  "count": 6,
+  "listings": [
+    {
+      "id": "apto-boa-viagem-101",
+      "title": "Apartamento 3 quartos com vista mar",
+      "photo": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=640&q=60",
+      "bairro": "Boa Viagem",
+      "tipo": "Apartamento",
+      "valor": 850000,
+      "valor_formatado": "R$ 850.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/apto-boa-viagem-101"
+    },
+    {
+      "id": "casa-boa-viagem-204",
+      "title": "Casa em condomínio fechado",
+      "photo": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=640&q=60",
+      "bairro": "Boa Viagem",
+      "tipo": "Casa",
+      "valor": 1250000,
+      "valor_formatado": "R$ 1.250.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/casa-boa-viagem-204"
+    },
+    {
+      "id": "apto-casa-forte-317",
+      "title": "Apartamento reformado, 2 quartos",
+      "photo": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=640&q=60",
+      "bairro": "Casa Forte",
+      "tipo": "Apartamento",
+      "valor": 620000,
+      "valor_formatado": "R$ 620.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/apto-casa-forte-317"
+    },
+    {
+      "id": "sala-comercial-derby-050",
+      "title": "Sala comercial no Derby",
+      "photo": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=640&q=60",
+      "bairro": "Derby",
+      "tipo": "Comercial",
+      "valor": 380000,
+      "valor_formatado": "R$ 380.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/sala-comercial-derby-050"
+    },
+    {
+      "id": "cobertura-boa-viagem-412",
+      "title": "Cobertura duplex de frente pro mar",
+      "photo": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=640&q=60",
+      "bairro": "Boa Viagem",
+      "tipo": "Cobertura",
+      "valor": 2100000,
+      "valor_formatado": "R$ 2.100.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/cobertura-boa-viagem-412"
+    },
+    {
+      "id": "terreno-piedade-089",
+      "title": "Terreno 450m² próximo à praia",
+      "photo": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=640&q=60",
+      "bairro": "Piedade",
+      "tipo": "Terreno",
+      "valor": 540000,
+      "valor_formatado": "R$ 540.000",
+      "link": "https://www.shalomconsultoria.com.br/imovel/terreno-piedade-089"
+    }
+  ]
+}
