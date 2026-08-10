@@ -165,7 +165,7 @@
         rejected += 1;
         continue;
       }
-      selectedFiles.push({ file, url: URL.createObjectURL(file) });
+      selectedFiles.push({ file, url: URL.createObjectURL(file), originalFile: file, rotationDeg: 0 });
     }
     photosInput.value = ""; // permite selecionar o mesmo arquivo de novo depois
     if (rejected > 0) {
@@ -195,6 +195,55 @@
     const [item] = selectedFiles.splice(fromIndex, 1);
     selectedFiles.splice(toIndex, 0, item);
     renderPhotoPreview();
+  }
+
+  function rotateFileAt(index) {
+    const item = selectedFiles[index];
+    if (!item) return;
+
+    // Sempre gira a partir do arquivo ORIGINAL no ângulo acumulado -- girar
+    // repetidamente a partir do resultado já girado faz a margem branca
+    // (necessária pra caber o retângulo girado) se acumular a cada clique,
+    // fazendo a foto "encolher" visualmente.
+    const newRotation = (item.rotationDeg + 45) % 360;
+    const sourceUrl = URL.createObjectURL(item.originalFile);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(sourceUrl);
+      const rad = (newRotation * Math.PI) / 180;
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const newW = Math.round(Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad)));
+      const newH = Math.round(Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad)));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = newW;
+      canvas.height = newH;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, newW, newH);
+      ctx.translate(newW / 2, newH / 2);
+      ctx.rotate(rad);
+      ctx.drawImage(img, -w / 2, -h / 2);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const rotatedFile = new File([blob], item.originalFile.name, { type: "image/jpeg" });
+          URL.revokeObjectURL(item.url);
+          selectedFiles[index] = {
+            file: rotatedFile,
+            url: URL.createObjectURL(rotatedFile),
+            originalFile: item.originalFile,
+            rotationDeg: newRotation,
+          };
+          renderPhotoPreview();
+        },
+        "image/jpeg",
+        0.92
+      );
+    };
+    img.src = sourceUrl;
   }
 
   function clearSelectedFiles() {
@@ -250,7 +299,16 @@
       rightBtn.setAttribute("aria-label", "Mover para frente");
       rightBtn.addEventListener("click", () => moveFile(index, 1));
 
+      const rotateBtn = document.createElement("button");
+      rotateBtn.type = "button";
+      rotateBtn.className = "photo-move-btn";
+      rotateBtn.textContent = "⟳";
+      rotateBtn.title = "Girar 45°";
+      rotateBtn.setAttribute("aria-label", `Girar foto ${index + 1} em 45 graus`);
+      rotateBtn.addEventListener("click", () => rotateFileAt(index));
+
       moveRow.appendChild(leftBtn);
+      moveRow.appendChild(rotateBtn);
       moveRow.appendChild(rightBtn);
       card.appendChild(moveRow);
 

@@ -193,7 +193,7 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .photo-move-row {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   margin-top: 4px;
 }
 
@@ -204,7 +204,7 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
   border-radius: 4px;
   font-size: 0.7rem;
   line-height: 1;
-  padding: 3px 6px;
+  padding: 3px 5px;
   cursor: pointer;
 }
 
