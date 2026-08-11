@@ -7,7 +7,7 @@ import enum
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -46,6 +46,17 @@ class ReadjustmentIndex(str, enum.Enum):
     IGPM = "igpm"
     IPCA = "ipca"
     NENHUM = "nenhum"
+
+
+class ChargeKind(str, enum.Enum):
+    FIXA = "fixa"
+    VARIAVEL = "variavel"
+
+
+class ChargeLaunchStatus(str, enum.Enum):
+    PENDENTE = "pendente"
+    PAGA = "paga"
+    ATRASADA = "atrasada"
 
 
 class User(Base):
@@ -164,3 +175,54 @@ class Contract(Base):
 
     property: Mapped["Property"] = relationship("Property", back_populates="contracts")
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="contracts")
+    charges: Mapped[list["Charge"]] = relationship(
+        "Charge", back_populates="contract", cascade="all, delete-orphan"
+    )
+
+
+class Charge(Base):
+    """Conta recorrente de um contrato: aluguel/tx. administração são fixas
+    (mesmo valor todo mês); água, condomínio, IPTU etc. costumam ser
+    variáveis (o síndico faz o rateio e o valor muda mês a mês) — por isso
+    cada conta variável precisa de um lançamento (ChargeLaunch) por
+    competência com o valor daquele mês."""
+
+    __tablename__ = "charges"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    contract_id: Mapped[str] = mapped_column(String(32), ForeignKey("contracts.id"), nullable=False, index=True)
+
+    nome: Mapped[str] = mapped_column(String(120), nullable=False)  # Água, Condomínio, IPTU, Luz, Gás...
+    tipo: Mapped[str] = mapped_column(Enum(ChargeKind), default=ChargeKind.VARIAVEL, nullable=False)
+    valor_fixo: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)  # usado quando tipo=fixa
+    dia_vencimento: Mapped[int | None] = mapped_column(nullable=True)  # se diferente do vencimento do aluguel
+    ativa: Mapped[bool] = mapped_column(default=True)
+    observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="charges")
+    launches: Mapped[list["ChargeLaunch"]] = relationship(
+        "ChargeLaunch", back_populates="charge", cascade="all, delete-orphan"
+    )
+
+
+class ChargeLaunch(Base):
+    """Lançamento mensal de uma conta (competência = 'AAAA-MM'). Para contas
+    fixas normalmente repete o valor_fixo; para variáveis, o valor é
+    digitado manualmente a cada mês (ex.: rateio de água do condomínio)."""
+
+    __tablename__ = "charge_launches"
+    __table_args__ = (UniqueConstraint("charge_id", "competencia", name="uq_charge_competencia"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    charge_id: Mapped[str] = mapped_column(String(32), ForeignKey("charges.id"), nullable=False, index=True)
+
+    competencia: Mapped[str] = mapped_column(String(7), nullable=False)  # "AAAA-MM"
+    valor: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    vencimento: Mapped[date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(Enum(ChargeLaunchStatus), default=ChargeLaunchStatus.PENDENTE, nullable=False)
+    pago_em: Mapped[date | None] = mapped_column(Date, nullable=True)
+    observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    charge: Mapped["Charge"] = relationship("Charge", back_populates="launches")

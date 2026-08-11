@@ -7,7 +7,16 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Contract, ContractStatus, Owner, Property, PropertyStatus, Tenant
+from app.models import (
+    ChargeLaunch,
+    ChargeLaunchStatus,
+    Contract,
+    ContractStatus,
+    Owner,
+    Property,
+    PropertyStatus,
+    Tenant,
+)
 from app.schemas import DashboardSummary
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
@@ -39,6 +48,13 @@ def summary(db: Session = Depends(get_db)):
         for c in contratos_ativos_query.all()
     )
 
+    contas_variaveis_pendentes = (
+        db.query(func.count(ChargeLaunch.id))
+        .filter(ChargeLaunch.status != ChargeLaunchStatus.PAGA)
+        .scalar()
+        or 0
+    )
+
     return DashboardSummary(
         total_proprietarios=total_proprietarios,
         total_inquilinos=total_inquilinos,
@@ -49,4 +65,5 @@ def summary(db: Session = Depends(get_db)):
         contratos_vencendo_30_dias=contratos_vencendo,
         receita_aluguel_mensal=round(receita_aluguel, 2),
         receita_administracao_mensal=round(receita_administracao, 2),
+        contas_variaveis_pendentes=contas_variaveis_pendentes,
     )

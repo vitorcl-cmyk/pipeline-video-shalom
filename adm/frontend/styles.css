@@ -191,6 +191,18 @@ tbody tr:hover { background: var(--surface-2); }
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .empty-state { padding: 40px; text-align: center; color: var(--text-muted); }
 
+.charge-card { margin-bottom: 16px; }
+.charge-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.charge-card-header strong { font-size: 0.95rem; margin-right: 8px; }
+
 .badge {
   display: inline-block;
   padding: 3px 10px;

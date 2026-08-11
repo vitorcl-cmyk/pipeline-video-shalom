@@ -3,7 +3,14 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from app.models import ContractStatus, PropertyStatus, PropertyType, ReadjustmentIndex
+from app.models import (
+    ChargeKind,
+    ChargeLaunchStatus,
+    ContractStatus,
+    PropertyStatus,
+    PropertyType,
+    ReadjustmentIndex,
+)
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -199,6 +206,74 @@ class ContractOut(ContractBase):
 
 
 # ---------------------------------------------------------------------------
+# Charge (conta fixa/variável) e ChargeLaunch (lançamento mensal)
+# ---------------------------------------------------------------------------
+
+
+class ChargeBase(BaseModel):
+    nome: str
+    tipo: ChargeKind = ChargeKind.VARIAVEL
+    valor_fixo: float | None = None
+    dia_vencimento: int | None = None
+    ativa: bool = True
+    observacoes: str | None = None
+
+
+class ChargeCreate(ChargeBase):
+    pass
+
+
+class ChargeUpdate(BaseModel):
+    nome: str | None = None
+    tipo: ChargeKind | None = None
+    valor_fixo: float | None = None
+    dia_vencimento: int | None = None
+    ativa: bool | None = None
+    observacoes: str | None = None
+
+
+class ChargeOut(ChargeBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_id: str
+    created_at: datetime
+
+
+class ChargeLaunchBase(BaseModel):
+    competencia: str  # "AAAA-MM"
+    valor: float
+    vencimento: date | None = None
+    status: ChargeLaunchStatus = ChargeLaunchStatus.PENDENTE
+    pago_em: date | None = None
+    observacoes: str | None = None
+
+
+class ChargeLaunchCreate(ChargeLaunchBase):
+    valor: float | None = None  # se omitido numa conta fixa, usa charge.valor_fixo
+
+
+class ChargeLaunchUpdate(BaseModel):
+    valor: float | None = None
+    vencimento: date | None = None
+    status: ChargeLaunchStatus | None = None
+    pago_em: date | None = None
+    observacoes: str | None = None
+
+
+class ChargeLaunchOut(ChargeLaunchBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    charge_id: str
+    created_at: datetime
+
+
+class ChargeWithLaunchesOut(ChargeOut):
+    launches: list[ChargeLaunchOut] = []
+
+
+# ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
 
@@ -213,3 +288,4 @@ class DashboardSummary(BaseModel):
     contratos_vencendo_30_dias: int
     receita_aluguel_mensal: float
     receita_administracao_mensal: float
+    contas_variaveis_pendentes: int

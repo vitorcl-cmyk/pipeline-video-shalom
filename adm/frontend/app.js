@@ -7,6 +7,8 @@ const state = {
   owners: [],
   tenants: [],
   properties: [],
+  currentContractId: null,
+  charges: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -236,6 +238,7 @@ async function loadDashboard() {
       ["Vencendo em 30 dias", s.contratos_vencendo_30_dias],
       ["Receita de aluguel/mês", money(s.receita_aluguel_mensal)],
       ["Receita de administração/mês", money(s.receita_administracao_mensal)],
+      ["Contas variáveis/fixas pendentes", s.contas_variaveis_pendentes],
     ]
       .map(([label, value]) => `
         <div class="stat-card">
@@ -572,12 +575,14 @@ async function loadContracts() {
           <td>${dateFmt(c.data_inicio)} – ${c.data_fim ? dateFmt(c.data_fim) : "indeterminado"}</td>
           <td>${badge(CONTRACT_STATUS_LABEL[c.status] || [c.status, "muted"])}</td>
           <td class="row-actions">
+            <button class="btn secondary small" data-charges="${c.id}">Contas</button>
             <button class="btn secondary small" data-edit="${c.id}">Editar</button>
             <button class="btn danger small" data-delete="${c.id}">Excluir</button>
           </td>
         </tr>`).join("")
     : `<tr><td colspan="6" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
+  tbody.querySelectorAll("[data-charges]").forEach((b) => b.addEventListener("click", () => openContractCharges(b.dataset.charges)));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openContractModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteContract(b.dataset.delete)));
 }
@@ -677,6 +682,199 @@ document.getElementById("contract-new-btn").addEventListener("click", async () =
   if (!state.properties.length) state.properties = await api("/properties");
   openContractModal(null);
 });
+
+// ---------------------------------------------------------------------------
+// Charges (contas fixas/variáveis por contrato)
+// ---------------------------------------------------------------------------
+
+const CHARGE_KIND_LABEL = { fixa: "Fixa", variavel: "Variável" };
+const LAUNCH_STATUS_LABEL = {
+  pendente: ["Pendente", "warn"],
+  paga: ["Paga", "ok"],
+  atrasada: ["Atrasada", "danger"],
+};
+
+function competenciaLabel(c) {
+  if (!c) return "—";
+  const [y, m] = c.split("-");
+  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  return `${meses[parseInt(m, 10) - 1]}/${y}`;
+}
+
+async function openContractCharges(contractId) {
+  state.currentContractId = contractId;
+  const contract = state.contracts.find((c) => c.id === contractId);
+  document.querySelectorAll(".page").forEach((p) => p.classList.add("hidden"));
+  document.getElementById("page-charges").classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.getElementById("charges-subtitle").textContent = contract
+    ? `${contract.property ? contract.property.endereco : ""} — ${contract.tenant ? contract.tenant.nome : ""}`
+    : "";
+  await loadCharges();
+}
+
+async function loadCharges() {
+  const charges = await api(`/contracts/${state.currentContractId}/charges`);
+  state.charges = charges;
+  const el = document.getElementById("charges-list");
+  el.innerHTML = charges.length
+    ? charges.map((c) => chargeCardHtml(c)).join("")
+    : `<div class="card"><div class="empty-state">Nenhuma conta cadastrada ainda. Clique em "+ Nova conta" para adicionar aluguel, condomínio, água etc.</div></div>`;
+
+  charges.forEach((c) => {
+    document.querySelector(`[data-launch-new="${c.id}"]`)?.addEventListener("click", () => openLaunchModal(c.id));
+    document.querySelector(`[data-charge-delete="${c.id}"]`)?.addEventListener("click", () => deleteCharge(c.id));
+    (c.launches || []).forEach((l) => {
+      document.querySelector(`[data-launch-pay="${l.id}"]`)?.addEventListener("click", () => markLaunchPaid(l.id));
+      document.querySelector(`[data-launch-delete="${l.id}"]`)?.addEventListener("click", () => deleteLaunch(l.id));
+    });
+  });
+}
+
+function chargeCardHtml(c) {
+  const launches = [...(c.launches || [])].sort((a, b) => b.competencia.localeCompare(a.competencia));
+  const valorLabel = c.tipo === "fixa" ? money(c.valor_fixo) + "/mês" : "varia por mês";
+  return `
+    <div class="card charge-card">
+      <div class="charge-card-header">
+        <div>
+          <strong>${c.nome}</strong>
+          <span class="badge ${c.tipo === "fixa" ? "muted" : "warn"}">${CHARGE_KIND_LABEL[c.tipo]}</span>
+          <span class="hint" style="margin-left:8px;">${valorLabel}</span>
+        </div>
+        <div class="row-actions">
+          <button class="btn small" data-launch-new="${c.id}">+ Lançar mês</button>
+          <button class="btn danger small" data-charge-delete="${c.id}">Excluir conta</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Competência</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${launches.length ? launches.map((l) => `
+            <tr>
+              <td>${competenciaLabel(l.competencia)}</td>
+              <td>${money(l.valor)}</td>
+              <td>${dateFmt(l.vencimento)}</td>
+              <td>${badge(LAUNCH_STATUS_LABEL[l.status] || [l.status, "muted"])}</td>
+              <td class="row-actions">
+                ${l.status !== "paga" ? `<button class="btn secondary small" data-launch-pay="${l.id}">Marcar paga</button>` : ""}
+                <button class="btn danger small" data-launch-delete="${l.id}">Excluir</button>
+              </td>
+            </tr>`).join("") : `<tr><td colspan="5" class="empty-state">Nenhum lançamento ainda.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function chargeFieldsHtml() {
+  return `
+    <label>Nome *</label>
+    <input name="nome" required placeholder="Água, Condomínio, IPTU..." />
+    <div class="form-grid">
+      <div><label>Tipo</label>
+        <select name="tipo">
+          <option value="variavel">Variável (valor muda todo mês, ex: água)</option>
+          <option value="fixa">Fixa (mesmo valor todo mês)</option>
+        </select>
+      </div>
+      <div><label>Valor fixo (R$)</label><input name="valor_fixo" type="number" step="0.01" /></div>
+    </div>
+    <label>Dia de vencimento (opcional, se diferente do aluguel)</label>
+    <input name="dia_vencimento" type="number" min="1" max="31" />
+    <label>Observações</label><textarea name="observacoes"></textarea>
+    <p class="hint">Contas variáveis (água, condomínio quando rateado) não precisam de valor fixo aqui — você lança o valor de cada mês depois, na tela da conta.</p>
+  `;
+}
+
+function openChargeModal() {
+  openModal("Nova conta", chargeFieldsHtml(), async (fd) => {
+    const tipo = fd.get("tipo");
+    const valorFixo = formValue(fd, "valor_fixo");
+    if (tipo === "fixa" && !valorFixo) throw new Error("Informe o valor fixo para uma conta do tipo Fixa");
+    const payload = {
+      nome: fd.get("nome"),
+      tipo,
+      valor_fixo: tipo === "fixa" ? parseFloat(valorFixo) : null,
+      dia_vencimento: fd.get("dia_vencimento") ? parseInt(fd.get("dia_vencimento"), 10) : null,
+      observacoes: formValue(fd, "observacoes"),
+    };
+    await api(`/contracts/${state.currentContractId}/charges`, { method: "POST", body: payload });
+    await loadCharges();
+  });
+}
+
+document.getElementById("charge-new-btn").addEventListener("click", () => openChargeModal());
+document.getElementById("charges-back-btn").addEventListener("click", () => navigate("contracts"));
+
+function currentMonthCompetencia() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function launchFieldsHtml(charge) {
+  return `
+    <label>Competência (mês) *</label>
+    <input name="competencia_month" type="month" required value="${currentMonthCompetencia()}" />
+    <label>Valor (R$)${charge.tipo === "fixa" ? " — deixe em branco para usar o valor fixo (" + money(charge.valor_fixo) + ")" : " *"}</label>
+    <input name="valor" type="number" step="0.01" ${charge.tipo === "variavel" ? "required" : ""} />
+    <div class="form-grid">
+      <div><label>Vencimento</label><input name="vencimento" type="date" /></div>
+      <div><label>Status</label>
+        <select name="status">
+          <option value="pendente">Pendente</option>
+          <option value="paga">Paga</option>
+          <option value="atrasada">Atrasada</option>
+        </select>
+      </div>
+    </div>
+    <label>Observações</label><textarea name="observacoes"></textarea>
+  `;
+}
+
+function openLaunchModal(chargeId) {
+  const charge = state.charges.find((c) => c.id === chargeId);
+  openModal(`Lançar mês — ${charge.nome}`, launchFieldsHtml(charge), async (fd) => {
+    const payload = {
+      competencia: fd.get("competencia_month"),
+      valor: formValue(fd, "valor") ? parseFloat(fd.get("valor")) : null,
+      vencimento: formValue(fd, "vencimento"),
+      status: fd.get("status"),
+      observacoes: formValue(fd, "observacoes"),
+    };
+    await api(`/charges/${chargeId}/launches`, { method: "POST", body: payload });
+    await loadCharges();
+  });
+}
+
+async function markLaunchPaid(launchId) {
+  try {
+    await api(`/charge-launches/${launchId}`, { method: "PUT", body: { status: "paga" } });
+    await loadCharges();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteLaunch(launchId) {
+  if (!confirm("Excluir este lançamento?")) return;
+  try {
+    await api(`/charge-launches/${launchId}`, { method: "DELETE" });
+    await loadCharges();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteCharge(chargeId) {
+  if (!confirm("Excluir esta conta e todos os lançamentos dela?")) return;
+  try {
+    await api(`/charges/${chargeId}`, { method: "DELETE" });
+    await loadCharges();
+  } catch (err) {
+    alert(err.message);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Utils
