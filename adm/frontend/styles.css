@@ -5,8 +5,10 @@
   --border: #2a2f3a;
   --text: #e9ebf0;
   --text-muted: #9aa1ad;
-  --primary: #7c5cff;
-  --primary-hover: #6a4ce0;
+  /* Marca Shalom: laranja do logo como cor de destaque */
+  --primary: #f5821f;
+  --primary-hover: #d96f16;
+  --accent-dark: #1a1a1a;
   --success: #34c58f;
   --warning: #e0a930;
   --danger: #e0554f;
