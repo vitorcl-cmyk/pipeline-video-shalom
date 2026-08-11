@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Shalom Reels</title>
+<link rel="icon" type="image/png" href="logo-icon.png" />
+<link rel="stylesheet" href="styles.css?v=2" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="logo-icon.png" alt="Shalom" class="brand-icon" />
+    <span class="brand-text">SHALOM <span class="brand-text-sub">Admin</span></span>
+  </div>
+  <div id="logoutBox" class="user-box hidden">
+    <button id="adminLogoutBtn" class="btn btn-ghost">Sair</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <section id="adminAuthSection" class="card auth-card">
+    <h2 style="margin-top:0;">Área de admin</h2>
+    <form id="adminLoginForm">
+      <label>Senha
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+      <p class="form-error" data-for="adminLoginForm"></p>
+    </form>
+  </section>
+
+  <section id="adminPanel" class="hidden">
+
+    <div class="card">
+      <div class="usage-row">
+        <h2>Usuários</h2>
+        <button id="adminRefreshBtn" class="btn btn-ghost">Atualizar</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>E-mail</th>
+              <th>Nome</th>
+              <th>Cadastrado em</th>
+              <th>Última atividade</th>
+              <th>Vídeos</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Acessos recentes</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="loginsTable">
+          <thead>
+            <tr>
+              <th>Resultado</th>
+              <th>E-mail</th>
+              <th>IP</th>
+              <th>Quando</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Shalom Reels — área de administração</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="admin.js?v=1"></script>
+</body>
+</html>

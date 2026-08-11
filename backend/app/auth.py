@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -69,4 +69,37 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuário inativo")
+
+    user.last_seen_at = datetime.now(timezone.utc)
+    db.commit()
+
     return user
+
+
+# ---- Area de admin: token separado, nao ligado a nenhuma conta de usuario ----
+
+admin_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def create_admin_token() -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ADMIN_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"sub": "admin", "scope": "admin", "exp": expire}
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def get_current_admin(
+    credentials: HTTPAuthorizationCredentials | None = Depends(admin_bearer_scheme),
+) -> None:
+    admin_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso de admin inválido",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if credentials is None:
+        raise admin_exception
+    try:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        raise admin_exception
+    if payload.get("scope") != "admin":
+        raise admin_exception

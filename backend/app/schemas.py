@@ -57,3 +57,39 @@ class DailyUsageOut(BaseModel):
     used_today: int
     limit: int
     remaining: int
+
+
+# ---- Admin ----
+
+class AdminLoginRequest(BaseModel):
+    password: str
+
+
+class AdminToken(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class AdminUserOut(BaseModel):
+    id: str
+    email: EmailStr
+    full_name: str | None = None
+    created_at: datetime
+    last_seen_at: datetime | None = None
+    online: bool
+    jobs_count: int
+
+
+class LoginEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    success: bool
+    ip_address: str | None = None
+    created_at: datetime
+
+
+class AdminOverviewOut(BaseModel):
+    users: list[AdminUserOut]
+    recent_logins: list[LoginEventOut]

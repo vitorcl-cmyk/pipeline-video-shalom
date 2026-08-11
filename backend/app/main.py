@@ -6,27 +6,35 @@ import logging
 import shutil
 import threading
 import uuid
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import pipeline
 from app.auth import (
     authenticate_user,
     create_access_token,
+    create_admin_token,
+    get_current_admin,
     get_current_user,
     hash_password,
 )
 from app.config import settings
 from app.database import Base, engine, get_db
-from app.models import JobStatus, User, VideoJob, VideoStyle
+from app.models import JobStatus, LoginEvent, User, VideoJob, VideoStyle
 from app.schemas import (
+    AdminLoginRequest,
+    AdminOverviewOut,
+    AdminToken,
+    AdminUserOut,
     DailyUsageOut,
+    LoginEventOut,
     Token,
     UserCreate,
     UserOut,
@@ -73,15 +81,36 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
+def _client_ip(request: Request) -> str | None:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
 @app.post("/auth/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
+
+    db.add(
+        LoginEvent(
+            email=form_data.username,
+            success=user is not None,
+            ip_address=_client_ip(request),
+        )
+    )
+    db.commit()
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou senha inválidos",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    user.last_seen_at = datetime.now(timezone.utc)
+    db.commit()
+
     token = create_access_token(subject=user.id)
     return Token(access_token=token)
 
@@ -275,3 +304,51 @@ def usage_today(current_user: User = Depends(get_current_user), db: Session = De
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Admin (login/atividade) -- protegido por senha propria, nao ligado a conta de usuario
+# ---------------------------------------------------------------------------
+
+@app.post("/admin/login", response_model=AdminToken)
+def admin_login(payload: AdminLoginRequest):
+    if payload.password != settings.ADMIN_PASSWORD:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Senha de admin inválida")
+    return AdminToken(access_token=create_admin_token())
+
+
+def _as_utc(dt: datetime | None) -> datetime | None:
+    """SQLite drops tzinfo on round-trip; DateTime(timezone=True) columns can
+    come back naive even though they were written as UTC."""
+    if dt is not None and dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+@app.get("/admin/overview", response_model=AdminOverviewOut, dependencies=[Depends(get_current_admin)])
+def admin_overview(db: Session = Depends(get_db)):
+    online_cutoff = datetime.now(timezone.utc) - timedelta(minutes=settings.ADMIN_ONLINE_WINDOW_MINUTES)
+
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    jobs_counts = dict(
+        db.query(VideoJob.user_id, func.count(VideoJob.id)).group_by(VideoJob.user_id).all()
+    )
+
+    users_out = [
+        AdminUserOut(
+            id=u.id,
+            email=u.email,
+            full_name=u.full_name,
+            created_at=u.created_at,
+            last_seen_at=u.last_seen_at,
+            online=bool(_as_utc(u.last_seen_at) and _as_utc(u.last_seen_at) >= online_cutoff),
+            jobs_count=jobs_counts.get(u.id, 0),
+        )
+        for u in users
+    ]
+
+    recent_logins = (
+        db.query(LoginEvent).order_by(LoginEvent.created_at.desc()).limit(200).all()
+    )
+
+    return AdminOverviewOut(users=users_out, recent_logins=recent_logins)

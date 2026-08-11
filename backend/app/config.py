@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["*"]
 
+    # Area de admin (login/atividade). Definida via .env -- nunca commitar
+    # a senha real no repositorio.
+    ADMIN_PASSWORD: str = "change-me-in-production"
+    ADMIN_TOKEN_EXPIRE_MINUTES: int = 60 * 4
+    ADMIN_ONLINE_WINDOW_MINUTES: int = 5  # janela p/ considerar usuario "ativo agora"
+
 
 settings = Settings()
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

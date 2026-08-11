@@ -39,10 +39,23 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # Atualizado a cada requisicao autenticada; usado pela area de admin para
+    # aproximar "esta logado agora" (janela recente) vs so "ja acessou".
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     jobs: Mapped[list["VideoJob"]] = relationship(
         "VideoJob", back_populates="user", cascade="all, delete-orphan"
     )
+
+
+class LoginEvent(Base):
+    __tablename__ = "login_events"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    success: Mapped[bool] = mapped_column(nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
 
 
 class VideoJob(Base):
