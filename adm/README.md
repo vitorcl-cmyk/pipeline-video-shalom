@@ -20,7 +20,16 @@ compartilha banco de dados nem código com o gerador de vídeos.
   - O status do imóvel (`disponivel` / `alugado`) é atualizado automaticamente
     conforme contratos são criados/encerrados.
 - **Dashboard**: contagens gerais, contratos vencendo em 30 dias, receita de
-  aluguel e de administração projetadas (soma dos contratos ativos).
+  aluguel e de administração projetadas (soma dos contratos ativos), contas
+  pendentes.
+- **Contas fixas e variáveis por contrato** (inspirado na tela equivalente do
+  Nido ADM): cada contrato pode ter contas do tipo **fixa** (mesmo valor todo
+  mês, ex.: taxa de condomínio quando não é rateada) ou **variável** (o valor
+  muda mês a mês, caso típico da **água** em apartamentos onde o condomínio
+  faz o rateio do consumo entre as unidades). Contas variáveis exigem um
+  lançamento mensal manual com o valor daquele mês; contas fixas geram o
+  lançamento automaticamente a partir do valor cadastrado. Acesse pelo botão
+  "Contas" na lista de Contratos.
 
 ## Estrutura
 
@@ -29,13 +38,13 @@ adm/
   backend/
     app/
       main.py          # monta o FastAPI e registra os routers
-      models.py         # SQLAlchemy: User, Owner, Tenant, Property, Contract
+      models.py         # SQLAlchemy: User, Owner, Tenant, Property, Contract, Charge, ChargeLaunch
       schemas.py         # Pydantic (request/response)
       auth.py             # hash de senha (bcrypt) e JWT
       database.py          # engine/sessão SQLAlchemy
       config.py             # configurações via .env
       routers/
-        auth.py, owners.py, tenants.py, properties.py, contracts.py, dashboard.py
+        auth.py, owners.py, tenants.py, properties.py, contracts.py, charges.py, dashboard.py
     requirements.txt
     .env.example
   frontend/
@@ -92,9 +101,10 @@ script de importação em `adm/backend/scripts/` a partir deles.
 
 ## Roadmap (próximos módulos)
 
-1. **Cobrança/financeiro**: geração de boletos/cobranças mensais de aluguel a
-   partir dos contratos ativos, controle de recebimentos e repasse aos
-   proprietários (descontando a taxa de administração).
+1. **Cobrança/financeiro**: já existem as contas fixas/variáveis e seus
+   lançamentos mensais; falta gerar o **boleto/cobrança** de fato (aluguel +
+   contas do mês, tudo junto) e o **repasse ao proprietário** (aluguel menos
+   taxa de administração).
 2. **Conciliação bancária com o Banco Inter**: usar a
    [API oficial do Banco Inter](https://developers.inter.co/) (conta PJ) para
    consultar extrato/pagamentos automaticamente e casar com as cobranças em
