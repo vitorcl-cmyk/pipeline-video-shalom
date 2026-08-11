@@ -1,0 +1,22 @@
+[Unit]
+Description=Shalom ADM API (FastAPI + Gunicorn/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/shalom-adm/adm/backend
+EnvironmentFile=/opt/shalom-adm/adm/backend/.env
+ExecStart=/opt/shalom-adm/adm/backend/.venv/bin/gunicorn app.main:app \
+    --workers 2 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8010 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile -
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

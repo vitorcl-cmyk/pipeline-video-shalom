@@ -113,3 +113,22 @@ script de importação em `adm/backend/scripts/` a partir deles.
 Mesmo padrão do projeto de vídeos: Gunicorn+Uvicorn atrás de Nginx, Postgres
 em vez de SQLite (`DATABASE_URL` no `.env`), `SECRET_KEY` forte gerada com
 `openssl rand -hex 32`, `CORS_ORIGINS` restrito ao domínio do frontend.
+
+### Deploy rápido (servidor Debian/Ubuntu, via SSH como root)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitorcl-cmyk/pipeline-video-shalom/claude/shalom-adm-build-kq0j6m/adm/deploy/deploy.sh | bash
+```
+
+O script (`adm/deploy/deploy.sh`) é idempotente — instala dependências,
+clona/atualiza o repositório em `/opt/shalom-adm`, sobe o backend como
+serviço systemd (`shalom-adm-api`) e configura o Nginx para servir o
+frontend + proxy da API na porta **669**. Rodar de novo atualiza tudo
+(`git pull` + reinstala dependências + reinicia o serviço).
+
+Comandos úteis depois do deploy:
+
+```bash
+systemctl status shalom-adm-api      # status do backend
+journalctl -u shalom-adm-api -f      # logs em tempo real
+```
