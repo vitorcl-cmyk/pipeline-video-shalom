@@ -50,8 +50,14 @@ a { color: var(--primary); }
   max-width: 400px;
 }
 
-.auth-card h1 { margin-top: 0; font-size: 1.4rem; }
-.auth-card .subtitle { color: var(--text-muted); margin-top: -8px; margin-bottom: 20px; font-size: 0.9rem; }
+.brand-mark { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.brand-icon { width: 40px; height: auto; flex-shrink: 0; }
+.brand-icon-sm { width: 20px; height: auto; flex-shrink: 0; }
+
+.auth-card h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.04em; font-weight: 800; }
+.brand-suffix { color: var(--primary); }
+.brand-tagline { margin: 0; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.auth-card .subtitle { color: var(--text-muted); margin-top: 16px; margin-bottom: 20px; font-size: 0.9rem; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tab-btn {
@@ -80,7 +86,15 @@ a { color: var(--primary); }
   gap: 4px;
 }
 
-.sidebar .brand { font-weight: 700; font-size: 1.1rem; padding: 0 8px 16px; }
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  padding: 0 8px 16px;
+}
 
 .nav-btn {
   display: flex;
