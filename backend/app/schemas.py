@@ -70,6 +70,10 @@ class AdminToken(BaseModel):
     token_type: str = "bearer"
 
 
+class AdminResetPasswordRequest(BaseModel):
+    new_password: str = Field(min_length=8, max_length=128)
+
+
 class AdminUserOut(BaseModel):
     id: str
     email: EmailStr

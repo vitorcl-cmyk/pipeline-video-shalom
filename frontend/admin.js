@@ -64,13 +64,45 @@
         <td>${fmtDate(u.created_at)}</td>
         <td>${fmtDate(u.last_seen_at)}</td>
         <td>${u.jobs_count}</td>
+        <td><button type="button" class="btn btn-ghost btn-sm" data-reset-user="${u.id}" data-reset-email="${u.email}">Redefinir senha</button></td>
       </tr>`
       )
       .join("");
     if (!users.length) {
-      usersTbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum usuário ainda.</td></tr>';
+      usersTbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum usuário ainda.</td></tr>';
     }
   }
+
+  async function resetUserPassword(userId, email) {
+    const newPassword = prompt(`Nova senha para ${email} (mín. 8 caracteres):`);
+    if (!newPassword) return;
+    if (newPassword.length < 8) {
+      alert("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/admin/users/${userId}/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ new_password: newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || "Falha ao redefinir senha");
+      }
+      alert(`Senha de ${email} redefinida com sucesso.`);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  usersTbody.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-reset-user]");
+    if (btn) resetUserPassword(btn.dataset.resetUser, btn.dataset.resetEmail);
+  });
 
   function renderLogins(logins) {
     loginsTbody.innerHTML = logins

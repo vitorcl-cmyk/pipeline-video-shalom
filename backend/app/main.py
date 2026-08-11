@@ -31,6 +31,7 @@ from app.models import JobStatus, LoginEvent, User, VideoJob, VideoStyle
 from app.schemas import (
     AdminLoginRequest,
     AdminOverviewOut,
+    AdminResetPasswordRequest,
     AdminToken,
     AdminUserOut,
     DailyUsageOut,
@@ -352,3 +353,16 @@ def admin_overview(db: Session = Depends(get_db)):
     )
 
     return AdminOverviewOut(users=users_out, recent_logins=recent_logins)
+
+
+@app.post("/admin/users/{user_id}/reset-password", dependencies=[Depends(get_current_admin)])
+def admin_reset_password(
+    user_id: str, payload: AdminResetPasswordRequest, db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado")
+
+    user.hashed_password = hash_password(payload.new_password)
+    db.commit()
+    return {"status": "ok", "email": user.email}

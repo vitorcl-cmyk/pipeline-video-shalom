@@ -21,6 +21,8 @@
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const uploadForm = document.getElementById("uploadForm");
+  const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+  const forgotPasswordMsg = document.getElementById("forgotPasswordMsg");
 
   const photosInput = document.getElementById("photosInput");
   const photoPreview = document.getElementById("photoPreview");
@@ -111,6 +113,12 @@
     } catch (err) {
       showError(loginForm, err.message);
     }
+  });
+
+  forgotPasswordBtn.addEventListener("click", () => {
+    forgotPasswordMsg.textContent =
+      "Peça para um administrador redefinir sua senha na área de admin (/admin.html).";
+    forgotPasswordMsg.classList.remove("hidden");
   });
 
   registerForm.addEventListener("submit", async (e) => {

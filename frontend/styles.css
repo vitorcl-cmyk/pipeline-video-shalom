@@ -139,6 +139,20 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 
 .hint { font-size: 0.8rem; color: var(--text-muted); margin: -6px 0 0; }
 
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  align-self: flex-start;
+}
+
+.link-btn:hover { color: var(--primary-hover); }
+
 .photo-preview {
   display: flex;
   flex-wrap: wrap;

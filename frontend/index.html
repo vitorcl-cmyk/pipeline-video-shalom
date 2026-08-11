@@ -8,7 +8,7 @@
 <!-- ?v= é uma quebra de cache manual: aumente o número sempre que
      styles.css/app.js mudar, senão navegadores continuam usando a
      versão antiga em cache mesmo depois do deploy. -->
-<link rel="stylesheet" href="styles.css?v=2" />
+<link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
 
@@ -41,6 +41,8 @@
       </label>
       <button type="submit" class="btn btn-primary">Entrar</button>
       <p class="form-error" data-for="loginForm"></p>
+      <button type="button" id="forgotPasswordBtn" class="link-btn">Esqueci minha senha</button>
+      <p id="forgotPasswordMsg" class="hint hidden"></p>
     </form>
 
     <form id="registerForm" class="tab-panel">
@@ -106,6 +108,6 @@
 </footer>
 
 <script src="config.js"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
