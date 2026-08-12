@@ -281,6 +281,17 @@ function formValue(fd, key) {
   return v === "" ? null : v;
 }
 
+// Clica em qualquer lugar da linha (fora dos botões) pra abrir a edição —
+// os botões (Editar/Excluir/etc.) continuam com seus próprios comportamentos.
+function wireClickableRows(tbody, onOpen) {
+  tbody.querySelectorAll("[data-row-open]").forEach((row) =>
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      onOpen(row.dataset.rowOpen);
+    })
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Dashboard
 // ---------------------------------------------------------------------------
@@ -325,7 +336,7 @@ async function loadOwners() {
   const tbody = document.querySelector("#owners-table tbody");
   tbody.innerHTML = owners.length
     ? owners.map((o) => `
-        <tr>
+        <tr class="clickable-row" data-row-open="${o.id}">
           <td>${o.nome}</td>
           <td>${o.cpf_cnpj || "—"}</td>
           <td>${o.telefone || "—"}</td>
@@ -337,6 +348,7 @@ async function loadOwners() {
         </tr>`).join("")
     : `<tr><td colspan="5" class="empty-state">Nenhum proprietário cadastrado ainda.</td></tr>`;
 
+  wireClickableRows(tbody, (id) => openOwnerModal(id));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openOwnerModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteOwner(b.dataset.delete)));
 }
@@ -416,7 +428,7 @@ async function loadTenants() {
   const tbody = document.querySelector("#tenants-table tbody");
   tbody.innerHTML = tenants.length
     ? tenants.map((t) => `
-        <tr>
+        <tr class="clickable-row" data-row-open="${t.id}">
           <td>${t.nome}</td>
           <td>${t.cpf_cnpj || "—"}</td>
           <td>${t.telefone || "—"}</td>
@@ -428,6 +440,7 @@ async function loadTenants() {
         </tr>`).join("")
     : `<tr><td colspan="5" class="empty-state">Nenhum inquilino cadastrado ainda.</td></tr>`;
 
+  wireClickableRows(tbody, (id) => openTenantModal(id));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openTenantModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteTenant(b.dataset.delete)));
 }
@@ -504,7 +517,7 @@ async function loadProperties() {
   const tbody = document.querySelector("#properties-table tbody");
   tbody.innerHTML = properties.length
     ? properties.map((p) => `
-        <tr>
+        <tr class="clickable-row" data-row-open="${p.id}">
           <td>${p.endereco}${p.numero ? ", " + p.numero : ""}${p.cidade ? " — " + p.cidade : ""}</td>
           <td>${p.tipo}</td>
           <td>${p.owner ? p.owner.nome : "—"}</td>
@@ -516,6 +529,7 @@ async function loadProperties() {
         </tr>`).join("")
     : `<tr><td colspan="5" class="empty-state">Nenhum imóvel cadastrado ainda.</td></tr>`;
 
+  wireClickableRows(tbody, (id) => openPropertyModal(id));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openPropertyModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteProperty(b.dataset.delete)));
 }
@@ -647,14 +661,7 @@ async function loadContracts() {
         </tr>`).join("")
     : `<tr><td colspan="8" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
-  // Clica em qualquer lugar da linha (fora dos botões) pra abrir a edição —
-  // os botões continuam com seus próprios comportamentos.
-  tbody.querySelectorAll("[data-row-open]").forEach((row) =>
-    row.addEventListener("click", (e) => {
-      if (e.target.closest("button")) return;
-      openContractModal(row.dataset.rowOpen);
-    })
-  );
+  wireClickableRows(tbody, (id) => openContractModal(id));
   tbody.querySelectorAll("[data-charges]").forEach((b) => b.addEventListener("click", () => openContractCharges(b.dataset.charges)));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openContractModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteContract(b.dataset.delete)));
@@ -1124,7 +1131,7 @@ async function loadUsers() {
   const tbody = document.querySelector("#users-table tbody");
   tbody.innerHTML = users.length
     ? users.map((u) => `
-        <tr>
+        <tr class="clickable-row" data-row-open="${u.id}">
           <td>${u.full_name || "—"}${u.id === state.user?.id ? ' <span class="badge muted">você</span>' : ""}</td>
           <td>${u.email}</td>
           <td>${badge(u.is_active ? ["Ativo", "ok"] : ["Inativo", "muted"])}</td>
@@ -1135,6 +1142,7 @@ async function loadUsers() {
         </tr>`).join("")
     : `<tr><td colspan="4" class="empty-state">Nenhum usuário cadastrado ainda.</td></tr>`;
 
+  wireClickableRows(tbody, (id) => openUserModal(id));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openUserModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteUser(b.dataset.delete)));
 }
