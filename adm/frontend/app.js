@@ -1433,6 +1433,25 @@ function fichaCardHtml(analise) {
   return cards.join("");
 }
 
+function fichaAvisosHtml(analise) {
+  const avisos = [];
+  if (analise.tipo_documento === "cnpj" && !analise.dados_cadastrais) {
+    avisos.push(
+      "Dados cadastrais não foram encontrados — a consulta automática (BrasilAPI/ReceitaWS) falhou ou está " +
+      "bloqueada nesse servidor. Confira se o servidor tem acesso de saída à internet pra esses domínios."
+    );
+  }
+  if (!analise.dados_servidor) {
+    avisos.push(
+      "Servidor público/sanções não consultado — provavelmente falta configurar PORTAL_TRANSPARENCIA_TOKEN " +
+      "no .env do servidor (chave gratuita em https://api.portaldatransparencia.gov.br/swagger-ui.html), " +
+      "depois reinicie o serviço."
+    );
+  }
+  if (!avisos.length) return "";
+  return `<div class="card" style="border-color:#a15c00;"><strong>Avisos</strong><ul>${avisos.map((a) => `<li>${a}</li>`).join("")}</ul></div>`;
+}
+
 async function openFicha(id) {
   state.currentFichaId = id;
   document.querySelectorAll(".page").forEach((p) => p.classList.add("hidden"));
@@ -1443,7 +1462,7 @@ async function openFicha(id) {
   state.currentFicha = analise;
   document.getElementById("ficha-detalhe-title").textContent =
     `${analise.nome_candidato || "Análise"} — ${formatarDocumento(analise.documento, analise.tipo_documento)}`;
-  document.getElementById("ficha-avisos").innerHTML = "";
+  document.getElementById("ficha-avisos").innerHTML = fichaAvisosHtml(analise);
   document.getElementById("ficha-detalhe-cards").innerHTML = fichaCardHtml(analise);
 
   const spcForm = document.getElementById("ficha-spc-form");
