@@ -795,6 +795,7 @@ function chargeCardHtml(c) {
           <button class="btn danger small" data-charge-delete="${c.id}">Excluir conta</button>
         </div>
       </div>
+      <div class="table-scroll">
       <table>
         <thead><tr><th>Competência</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
         <tbody>
@@ -811,6 +812,7 @@ function chargeCardHtml(c) {
             </tr>`).join("") : `<tr><td colspan="5" class="empty-state">Nenhum lançamento ainda.</td></tr>`}
         </tbody>
       </table>
+      </div>
     </div>
   `;
 }

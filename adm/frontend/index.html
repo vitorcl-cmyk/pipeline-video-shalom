@@ -66,10 +66,10 @@
           <button class="btn" id="owner-new-btn">+ Novo proprietário</button>
         </div>
         <div class="search-bar"><input id="owner-search" placeholder="Buscar por nome ou CPF/CNPJ..." /></div>
-        <div class="card"><table id="owners-table">
+        <div class="card"><div class="table-scroll"><table id="owners-table">
           <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th></th></tr></thead>
           <tbody></tbody>
-        </table></div>
+        </table></div></div>
       </section>
 
       <!-- Tenants -->
@@ -79,10 +79,10 @@
           <button class="btn" id="tenant-new-btn">+ Novo inquilino</button>
         </div>
         <div class="search-bar"><input id="tenant-search" placeholder="Buscar por nome ou CPF/CNPJ..." /></div>
-        <div class="card"><table id="tenants-table">
+        <div class="card"><div class="table-scroll"><table id="tenants-table">
           <thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th></th></tr></thead>
           <tbody></tbody>
-        </table></div>
+        </table></div></div>
       </section>
 
       <!-- Properties -->
@@ -92,10 +92,10 @@
           <button class="btn" id="property-new-btn">+ Novo imóvel</button>
         </div>
         <div class="search-bar"><input id="property-search" placeholder="Buscar por endereço, bairro ou cidade..." /></div>
-        <div class="card"><table id="properties-table">
+        <div class="card"><div class="table-scroll"><table id="properties-table">
           <thead><tr><th>Endereço</th><th>Tipo</th><th>Proprietário</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
-        </table></div>
+        </table></div></div>
       </section>
 
       <!-- Contracts -->
@@ -104,10 +104,10 @@
           <h1>Contratos</h1>
           <button class="btn" id="contract-new-btn">+ Novo contrato</button>
         </div>
-        <div class="card"><table id="contracts-table">
+        <div class="card"><div class="table-scroll"><table id="contracts-table">
           <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
-        </table></div>
+        </table></div></div>
       </section>
 
       <!-- Charges (contas fixas/variáveis de um contrato) -->
@@ -126,10 +126,10 @@
         <div id="charges-list"></div>
 
         <h2 style="margin-top:32px;">Cobranças emitidas</h2>
-        <div class="card"><table id="invoices-table">
+        <div class="card"><div class="table-scroll"><table id="invoices-table">
           <thead><tr><th>Mês</th><th>Aluguel</th><th>Contas</th><th>Total</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
-        </table></div>
+        </table></div></div>
       </section>
 
     </main>
