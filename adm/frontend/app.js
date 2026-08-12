@@ -618,7 +618,7 @@ async function loadContracts() {
   const tbody = document.querySelector("#contracts-table tbody");
   tbody.innerHTML = contracts.length
     ? contracts.map((c) => `
-        <tr>
+        <tr class="clickable-row" data-row-open="${c.id}">
           <td>${c.property ? c.property.endereco : "—"}</td>
           <td>${c.tenant ? c.tenant.nome : "—"}</td>
           <td>${money(c.valor_aluguel)}</td>
@@ -633,6 +633,14 @@ async function loadContracts() {
         </tr>`).join("")
     : `<tr><td colspan="7" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
+  // Clica em qualquer lugar da linha (fora dos botões) pra abrir a edição —
+  // os botões continuam com seus próprios comportamentos.
+  tbody.querySelectorAll("[data-row-open]").forEach((row) =>
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      openContractModal(row.dataset.rowOpen);
+    })
+  );
   tbody.querySelectorAll("[data-charges]").forEach((b) => b.addEventListener("click", () => openContractCharges(b.dataset.charges)));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openContractModal(b.dataset.edit)));
   tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteContract(b.dataset.delete)));
