@@ -203,6 +203,18 @@ const currencyFmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency
 const money = (v) => (v === null || v === undefined ? "—" : currencyFmt.format(v));
 const dateFmt = (v) => (v ? new Date(v + "T00:00:00").toLocaleDateString("pt-BR") : "—");
 
+function readjustmentLabel(c) {
+  if (c.indice_reajuste === "nenhum" || !c.proxima_data_reajuste) return '<span class="hint">—</span>';
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const alvo = new Date(c.proxima_data_reajuste + "T00:00:00");
+  const dias = Math.round((alvo - hoje) / (1000 * 60 * 60 * 24));
+  const dataFmt = dateFmt(c.proxima_data_reajuste);
+  if (dias < 0) return `${badge(["Atrasado", "danger"])} <span class="hint">${dataFmt}</span>`;
+  if (dias <= 30) return `${badge([`Em ${dias}d`, "warn"])} <span class="hint">${dataFmt}</span>`;
+  return `<span class="hint">${dataFmt}</span>`;
+}
+
 const PROPERTY_STATUS_LABEL = {
   disponivel: ["Disponível", "ok"],
   alugado: ["Alugado", "warn"],
@@ -289,6 +301,7 @@ async function loadDashboard() {
       ["Receita de aluguel/mês", money(s.receita_aluguel_mensal)],
       ["Receita de administração/mês", money(s.receita_administracao_mensal)],
       ["Contas variáveis/fixas pendentes", s.contas_variaveis_pendentes],
+      ["Contratos com reajuste próximo/vencido", s.contratos_reajuste_proximo],
     ]
       .map(([label, value]) => `
         <div class="stat-card">
@@ -624,6 +637,7 @@ async function loadContracts() {
           <td>${money(c.valor_aluguel)}</td>
           <td>${money((c.valor_aluguel * c.taxa_administracao_percentual) / 100)}</td>
           <td>${dateFmt(c.data_inicio)} – ${c.data_fim ? dateFmt(c.data_fim) : "indeterminado"}</td>
+          <td>${readjustmentLabel(c)}</td>
           <td>${badge(CONTRACT_STATUS_LABEL[c.status] || [c.status, "muted"])}</td>
           <td class="row-actions">
             <button class="btn secondary small" data-charges="${c.id}">Contas</button>
@@ -631,7 +645,7 @@ async function loadContracts() {
             <button class="btn danger small" data-delete="${c.id}">Excluir</button>
           </td>
         </tr>`).join("")
-    : `<tr><td colspan="7" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
+    : `<tr><td colspan="8" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
   // Clica em qualquer lugar da linha (fora dos botões) pra abrir a edição —
   // os botões continuam com seus próprios comportamentos.
@@ -769,7 +783,7 @@ async function openContractCharges(contractId) {
   document.getElementById("charges-subtitle").textContent = contract
     ? `${contract.property ? contract.property.endereco : ""} — ${contract.tenant ? contract.tenant.nome : ""}`
     : "";
-  await Promise.all([loadCharges(), loadInvoices()]);
+  await Promise.all([loadCharges(), loadInvoices(), loadReadjustments()]);
 }
 
 async function loadCharges() {
@@ -1050,6 +1064,55 @@ async function deleteInvoice(id) {
     alert(err.message);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Reajuste de contrato
+// ---------------------------------------------------------------------------
+
+const INDICE_LABEL = { igpm: "IGP-M", ipca: "IPCA", nenhum: "Nenhum" };
+
+async function loadReadjustments() {
+  const items = await api(`/contracts/${state.currentContractId}/readjustments`);
+  const tbody = document.querySelector("#readjustments-table tbody");
+  tbody.innerHTML = items.length
+    ? items.map((r) => `
+        <tr>
+          <td>${dateFmt(r.data)}</td>
+          <td>${INDICE_LABEL[r.indice] || r.indice}</td>
+          <td>${r.percentual}%</td>
+          <td>${money(r.valor_anterior)}</td>
+          <td>${money(r.valor_novo)}</td>
+        </tr>`).join("")
+    : `<tr><td colspan="5" class="empty-state">Nenhum reajuste aplicado ainda.</td></tr>`;
+}
+
+function readjustmentFieldsHtml(contract) {
+  return `
+    <p class="hint">Valor atual do aluguel: <strong>${money(contract.valor_aluguel)}</strong> — índice: ${INDICE_LABEL[contract.indice_reajuste] || contract.indice_reajuste}</p>
+    <label>Percentual de reajuste (%) *</label>
+    <input name="percentual" type="number" step="0.01" required placeholder="Consulte o índice atual no Banco Central" />
+    <label>Data do reajuste</label>
+    <input name="data" type="date" value="${new Date().toISOString().slice(0, 10)}" />
+    <label>Observações</label>
+    <textarea name="observacoes" placeholder="Ex.: IGP-M acumulado 12 meses"></textarea>
+  `;
+}
+
+function openReadjustmentModal() {
+  const contract = state.contracts.find((c) => c.id === state.currentContractId);
+  if (!contract) return;
+  openModal("Reajustar contrato", readjustmentFieldsHtml(contract), async (fd) => {
+    const payload = {
+      percentual: parseFloat(fd.get("percentual")),
+      data: formValue(fd, "data"),
+      observacoes: formValue(fd, "observacoes"),
+    };
+    await api(`/contracts/${state.currentContractId}/readjustments`, { method: "POST", body: payload });
+    await loadReadjustments();
+  });
+}
+
+document.getElementById("readjustment-new-btn").addEventListener("click", () => openReadjustmentModal());
 
 // ---------------------------------------------------------------------------
 // Users (equipe com acesso ao painel)

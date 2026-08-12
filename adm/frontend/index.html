@@ -106,7 +106,7 @@
           <button class="btn" id="contract-new-btn">+ Novo contrato</button>
         </div>
         <div class="card"><div class="table-scroll"><table id="contracts-table">
-          <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Receita adm.</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Receita adm.</th><th>Vigência</th><th>Reajuste</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div></div>
       </section>
@@ -121,6 +121,7 @@
           </div>
           <div class="row-actions">
             <button class="btn" id="invoice-new-btn">Emitir cobrança do mês</button>
+            <button class="btn secondary" id="readjustment-new-btn">Reajustar contrato</button>
             <button class="btn secondary" id="charge-new-btn">+ Nova conta</button>
           </div>
         </div>
@@ -129,6 +130,12 @@
         <h2 style="margin-top:32px;">Cobranças emitidas</h2>
         <div class="card"><div class="table-scroll"><table id="invoices-table">
           <thead><tr><th>Mês</th><th>Aluguel</th><th>Contas</th><th>Total</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div></div>
+
+        <h2 style="margin-top:32px;">Histórico de reajustes</h2>
+        <div class="card"><div class="table-scroll"><table id="readjustments-table">
+          <thead><tr><th>Data</th><th>Índice</th><th>%</th><th>Valor anterior</th><th>Valor novo</th></tr></thead>
           <tbody></tbody>
         </table></div></div>
       </section>

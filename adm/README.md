@@ -37,6 +37,21 @@ compartilha banco de dados nem código com o gerador de vídeos.
   lançamento mensal manual com o valor daquele mês; contas fixas geram o
   lançamento automaticamente a partir do valor cadastrado. Acesse pelo botão
   "Contas" na lista de Contratos.
+- **Cobrança mensal consolidada**: emite a cobrança do mês (aluguel + contas)
+  por contrato, pedindo o valor de cada conta variável pendente antes de
+  fechar o total. Histórico de cobranças emitidas por contrato.
+- **Reajuste de contrato**: a coluna "Reajuste" na lista de Contratos mostra
+  a próxima data (12 meses após o início ou o último reajuste) e sinaliza em
+  laranja/vermelho quando está próxima ou atrasada. Como não há como buscar
+  o índice IGP-M/IPCA do mês automaticamente (sem acesso externo), o usuário
+  informa o percentual (consultado à parte no Banco Central) e o sistema
+  calcula o novo valor do aluguel e mantém histórico por contrato. Acesse
+  pelo botão "Reajustar contrato" na tela de Contas.
+- **Usuários**: gerenciar quem tem acesso ao painel (criar, editar, excluir)
+  estando logado — não depende mais de SSH nem de `ALLOW_REGISTRATION`.
+- **Receita por contrato**: coluna "Receita adm." na lista de Contratos
+  mostra quanto cada locação gera pra Shalom (aluguel × taxa de
+  administração).
 
 ## Estrutura
 
@@ -108,22 +123,23 @@ script de importação em `adm/backend/scripts/` a partir deles.
 
 ## Roadmap (próximos módulos)
 
-1. **Cobrança/financeiro**: já existem as contas fixas/variáveis e seus
-   lançamentos mensais; falta gerar o **boleto/cobrança** de fato (aluguel +
-   contas do mês, tudo junto) e o **repasse ao proprietário** (aluguel menos
-   taxa de administração).
+1. **Repasse ao proprietário**: já existe a cobrança consolidada (aluguel +
+   contas do mês); falta gerar o repasse (aluguel menos taxa de
+   administração) pra cada proprietário.
 2. **Conciliação bancária com o Banco Inter**: usar a
    [API oficial do Banco Inter](https://developers.inter.co/) (conta PJ) para
    consultar extrato/pagamentos automaticamente e casar com as cobranças em
    aberto. Pré-requisito: certificado + credenciais de API geradas no
    Internet Banking PJ do Inter (registro de aplicação) — isso depende de
    ação da Shalom junto ao banco, não é algo que o código resolve sozinho.
-3. **Reajuste de contratos**: cálculo automático de reajuste anual pelo
-   índice configurado (IGP-M/IPCA) com alerta próximo ao vencimento.
-4. **Documentos**: upload de contrato assinado, comprovantes, laudos de
+3. **Documentos**: upload de contrato assinado, comprovantes, laudos de
    vistoria por imóvel/contrato.
-5. **Permissões**: hoje qualquer usuário logado vê tudo; se a equipe crescer,
-   adicionar papéis (admin / operacional).
+4. **Permissões**: hoje qualquer usuário logado vê e edita tudo (inclusive
+   outros usuários); se a equipe crescer, adicionar papéis (admin / operacional).
+5. **Portal do proprietário / inquilino**: acesso separado e mais simples
+   pra cada um ver só os próprios dados, sem o painel completo da equipe.
+6. **Régua de inadimplência**: lembretes automáticos (WhatsApp/e-mail) pra
+   cobranças vencidas — depende de integração paga de envio.
 
 ## Produção
 

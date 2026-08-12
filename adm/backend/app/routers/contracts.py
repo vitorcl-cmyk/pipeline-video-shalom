@@ -7,10 +7,12 @@ não haja outro contrato ativo apontando para ele).
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
+from datetime import date as date_cls
+
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Contract, ContractStatus, Property, PropertyStatus, Tenant, User
-from app.schemas import ContractCreate, ContractOut, ContractUpdate
+from app.models import Contract, ContractStatus, Property, PropertyStatus, ReadjustmentLog, Tenant, User
+from app.schemas import ContractCreate, ContractOut, ContractUpdate, ReadjustmentApply, ReadjustmentLogOut
 
 router = APIRouter(prefix="/contracts", tags=["contracts"], dependencies=[Depends(get_current_user)])
 
@@ -120,3 +122,45 @@ def delete_contract(contract_id: str, db: Session = Depends(get_db)):
     if prop:
         _sync_property_status(db, prop)
     db.commit()
+
+
+@router.get("/{contract_id}/readjustments", response_model=list[ReadjustmentLogOut])
+def list_readjustments(contract_id: str, db: Session = Depends(get_db)):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
+    return (
+        db.query(ReadjustmentLog)
+        .filter(ReadjustmentLog.contract_id == contract_id)
+        .order_by(ReadjustmentLog.data.desc())
+        .all()
+    )
+
+
+@router.post("/{contract_id}/readjustments", response_model=ContractOut, status_code=status.HTTP_201_CREATED)
+def apply_readjustment(contract_id: str, payload: ReadjustmentApply, db: Session = Depends(get_db)):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
+
+    data_reajuste = payload.data or date_cls.today()
+    valor_anterior = float(contract.valor_aluguel)
+    valor_novo = round(valor_anterior * (1 + payload.percentual / 100), 2)
+
+    log = ReadjustmentLog(
+        contract_id=contract_id,
+        data=data_reajuste,
+        indice=contract.indice_reajuste,
+        percentual=payload.percentual,
+        valor_anterior=valor_anterior,
+        valor_novo=valor_novo,
+        observacoes=payload.observacoes,
+    )
+    db.add(log)
+
+    contract.valor_aluguel = valor_novo
+    contract.data_ultimo_reajuste = data_reajuste
+
+    db.commit()
+    db.refresh(contract)
+    return _base_query(db).filter(Contract.id == contract_id).first()

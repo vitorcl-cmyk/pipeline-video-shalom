@@ -15,9 +15,11 @@ from app.models import (
     Owner,
     Property,
     PropertyStatus,
+    ReadjustmentIndex,
     Tenant,
 )
 from app.schemas import DashboardSummary
+from app.utils import next_readjustment_date
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
 
@@ -55,6 +57,13 @@ def summary(db: Session = Depends(get_db)):
         or 0
     )
 
+    contratos_reajuste_proximo = sum(
+        1
+        for c in contratos_ativos_query.all()
+        if c.indice_reajuste != ReadjustmentIndex.NENHUM
+        and next_readjustment_date(c.data_inicio, c.data_ultimo_reajuste) <= limite
+    )
+
     return DashboardSummary(
         total_proprietarios=total_proprietarios,
         total_inquilinos=total_inquilinos,
@@ -66,4 +75,5 @@ def summary(db: Session = Depends(get_db)):
         receita_aluguel_mensal=round(receita_aluguel, 2),
         receita_administracao_mensal=round(receita_administracao, 2),
         contas_variaveis_pendentes=contas_variaveis_pendentes,
+        contratos_reajuste_proximo=contratos_reajuste_proximo,
     )

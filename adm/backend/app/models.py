@@ -179,6 +179,9 @@ class Contract(Base):
     indice_reajuste: Mapped[str] = mapped_column(
         Enum(ReadjustmentIndex), default=ReadjustmentIndex.IGPM, nullable=False
     )
+    # Base pro cálculo do próximo reajuste (12 meses depois). Enquanto nunca
+    # houve reajuste, usa-se data_inicio como base.
+    data_ultimo_reajuste: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     status: Mapped[str] = mapped_column(Enum(ContractStatus), default=ContractStatus.ATIVO, nullable=False)
 
@@ -193,6 +196,9 @@ class Contract(Base):
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="contracts")
     charges: Mapped[list["Charge"]] = relationship(
         "Charge", back_populates="contract", cascade="all, delete-orphan"
+    )
+    readjustments: Mapped[list["ReadjustmentLog"]] = relationship(
+        "ReadjustmentLog", back_populates="contract", cascade="all, delete-orphan"
     )
     invoices: Mapped[list["Invoice"]] = relationship(
         "Invoice", back_populates="contract", cascade="all, delete-orphan"
@@ -271,3 +277,22 @@ class Invoice(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     contract: Mapped["Contract"] = relationship("Contract", back_populates="invoices")
+
+
+class ReadjustmentLog(Base):
+    """Histórico de reajustes anuais aplicados a um contrato (IGP-M/IPCA)."""
+
+    __tablename__ = "readjustment_logs"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    contract_id: Mapped[str] = mapped_column(String(32), ForeignKey("contracts.id"), nullable=False, index=True)
+
+    data: Mapped[date] = mapped_column(Date, nullable=False)
+    indice: Mapped[str] = mapped_column(Enum(ReadjustmentIndex), nullable=False)
+    percentual: Mapped[float] = mapped_column(Numeric(6, 3), nullable=False)
+    valor_anterior: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    valor_novo: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="readjustments")

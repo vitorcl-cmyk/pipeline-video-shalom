@@ -1,7 +1,7 @@
 """Pydantic schemas (request/response) para auth e cadastros essenciais."""
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, computed_field
 
 from app.models import (
     ChargeKind,
@@ -11,6 +11,7 @@ from app.models import (
     PropertyType,
     ReadjustmentIndex,
 )
+from app.utils import next_readjustment_date
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -189,6 +190,7 @@ class ContractBase(BaseModel):
     valor_aluguel: float
     taxa_administracao_percentual: float = 10.0
     indice_reajuste: ReadjustmentIndex = ReadjustmentIndex.IGPM
+    data_ultimo_reajuste: date | None = None
     status: ContractStatus = ContractStatus.ATIVO
     fiador_nome: str | None = None
     fiador_cpf: str | None = None
@@ -209,6 +211,7 @@ class ContractUpdate(BaseModel):
     valor_aluguel: float | None = None
     taxa_administracao_percentual: float | None = None
     indice_reajuste: ReadjustmentIndex | None = None
+    data_ultimo_reajuste: date | None = None
     status: ContractStatus | None = None
     fiador_nome: str | None = None
     fiador_cpf: str | None = None
@@ -221,8 +224,39 @@ class ContractOut(ContractBase):
 
     id: str
     created_at: datetime
+
+    # Precisa vir ANTES do campo "property" abaixo: um campo do modelo
+    # chamado "property" reatribui esse nome dentro do corpo da classe,
+    # o que quebraria o decorator embutido @property se ele viesse depois.
+    @computed_field
+    @property
+    def proxima_data_reajuste(self) -> date | None:
+        if self.indice_reajuste == ReadjustmentIndex.NENHUM:
+            return None
+        return next_readjustment_date(self.data_inicio, self.data_ultimo_reajuste)
+
     property: PropertyOut | None = None
     tenant: TenantOut | None = None
+
+
+class ReadjustmentApply(BaseModel):
+    percentual: float
+    data: date | None = None
+    observacoes: str | None = None
+
+
+class ReadjustmentLogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_id: str
+    data: date
+    indice: ReadjustmentIndex
+    percentual: float
+    valor_anterior: float
+    valor_novo: float
+    observacoes: str | None
+    created_at: datetime
 
 
 # ---------------------------------------------------------------------------
@@ -364,3 +398,4 @@ class DashboardSummary(BaseModel):
     receita_aluguel_mensal: float
     receita_administracao_mensal: float
     contas_variaveis_pendentes: int
+    contratos_reajuste_proximo: int
