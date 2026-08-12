@@ -142,3 +142,26 @@ Comandos úteis depois do deploy:
 systemctl status shalom-adm-api      # status do backend
 journalctl -u shalom-adm-api -f      # logs em tempo real
 ```
+
+### Acesso externo (fora da rede local / celular)
+
+Se a porta 669 não estiver liberada no roteador (comum em provedor
+residencial com CGNAT), use um túnel Cloudflare permanente rodando como
+serviço no próprio servidor — assim continua acessível mesmo com o PC/
+notebook desligado:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitorcl-cmyk/pipeline-video-shalom/claude/shalom-adm-build-kq0j6m/adm/deploy/setup-tunnel.sh | bash
+```
+
+O comando mostra a URL atual do túnel (`https://algo.trycloudflare.com`) no
+final. Como não há domínio próprio configurado no Cloudflare, essa URL é
+aleatória e só muda se o serviço reiniciar. Pra recuperar a URL depois:
+
+```bash
+journalctl -u cloudflared-quicktunnel --no-pager -n 50 | grep trycloudflare
+```
+
+Para uma URL fixa de verdade (ex.: `adm.shalomconsultoria.com.br`), é
+necessário migrar o DNS do domínio para o Cloudflare — combine essa etapa
+separadamente antes de fazer, pois mexe num domínio de produção.

@@ -1,0 +1,12 @@
+[Unit]
+Description=Cloudflare Quick Tunnel for Shalom ADM (porta 669)
+After=network.target shalom-adm-api.service nginx.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflared tunnel --url http://localhost:669 --no-autoupdate
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
