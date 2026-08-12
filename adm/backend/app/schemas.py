@@ -274,6 +274,61 @@ class ChargeWithLaunchesOut(ChargeOut):
 
 
 # ---------------------------------------------------------------------------
+# Billing (emissão de cobrança mensal: aluguel + contas fixas/variáveis)
+# ---------------------------------------------------------------------------
+
+
+class BillingItemPreview(BaseModel):
+    charge_id: str
+    nome: str
+    tipo: ChargeKind
+    valor: float | None  # None quando é variável e ainda não foi lançado neste mês
+    needs_input: bool  # True = precisa que o usuário informe o valor antes de emitir
+
+
+class BillingPreviewOut(BaseModel):
+    contract_id: str
+    competencia: str
+    valor_aluguel: float
+    itens: list[BillingItemPreview]
+    ja_emitida: bool  # já existe uma cobrança gerada para esta competência
+
+
+class BillingGenerateRequest(BaseModel):
+    competencia: str
+    vencimento: date | None = None
+    valores: dict[str, float] = {}  # charge_id -> valor (obrigatório para variáveis sem lançamento)
+
+
+class InvoiceItemOut(BaseModel):
+    nome: str
+    tipo: str
+    valor: float
+
+
+class InvoiceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_id: str
+    competencia: str
+    valor_aluguel: float
+    valor_contas: float
+    valor_total: float
+    itens: list[InvoiceItemOut]
+    vencimento: date | None
+    status: ChargeLaunchStatus
+    pago_em: date | None
+    created_at: datetime
+
+
+class InvoiceUpdate(BaseModel):
+    status: ChargeLaunchStatus | None = None
+    vencimento: date | None = None
+    pago_em: date | None = None
+
+
+# ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
 

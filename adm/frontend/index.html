@@ -132,9 +132,18 @@
             <h1 id="charges-title">Contas do contrato</h1>
             <p class="hint" id="charges-subtitle"></p>
           </div>
-          <button class="btn" id="charge-new-btn">+ Nova conta</button>
+          <div class="row-actions">
+            <button class="btn" id="invoice-new-btn">Emitir cobrança do mês</button>
+            <button class="btn secondary" id="charge-new-btn">+ Nova conta</button>
+          </div>
         </div>
         <div id="charges-list"></div>
+
+        <h2 style="margin-top:32px;">Cobranças emitidas</h2>
+        <div class="card"><table id="invoices-table">
+          <thead><tr><th>Mês</th><th>Aluguel</th><th>Contas</th><th>Total</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
       </section>
 
     </main>

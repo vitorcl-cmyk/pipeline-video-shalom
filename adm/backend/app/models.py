@@ -7,7 +7,7 @@ import enum
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, JSON, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -178,6 +178,9 @@ class Contract(Base):
     charges: Mapped[list["Charge"]] = relationship(
         "Charge", back_populates="contract", cascade="all, delete-orphan"
     )
+    invoices: Mapped[list["Invoice"]] = relationship(
+        "Invoice", back_populates="contract", cascade="all, delete-orphan"
+    )
 
 
 class Charge(Base):
@@ -226,3 +229,29 @@ class ChargeLaunch(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     charge: Mapped["Charge"] = relationship("Charge", back_populates="launches")
+
+
+class Invoice(Base):
+    """Cobrança mensal consolidada de um contrato: aluguel + todas as contas
+    (fixas e variáveis) daquela competência somadas num total só. `itens`
+    guarda uma cópia (snapshot) da composição no momento da emissão, pra o
+    histórico não mudar se uma conta for editada/excluída depois."""
+
+    __tablename__ = "invoices"
+    __table_args__ = (UniqueConstraint("contract_id", "competencia", name="uq_invoice_contract_competencia"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    contract_id: Mapped[str] = mapped_column(String(32), ForeignKey("contracts.id"), nullable=False, index=True)
+
+    competencia: Mapped[str] = mapped_column(String(7), nullable=False)  # "AAAA-MM"
+    valor_aluguel: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    valor_contas: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    valor_total: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    itens: Mapped[list] = mapped_column(JSON, default=list)  # [{nome, tipo, valor}, ...]
+
+    vencimento: Mapped[date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(Enum(ChargeLaunchStatus), default=ChargeLaunchStatus.PENDENTE, nullable=False)
+    pago_em: Mapped[date | None] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="invoices")

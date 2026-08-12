@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, charges, contracts, dashboard, owners, properties, tenants
+from app.routers import auth, billing, charges, contracts, dashboard, owners, properties, tenants
 
 Base.metadata.create_all(bind=engine)
 
@@ -29,6 +29,7 @@ app.include_router(tenants.router)
 app.include_router(properties.router)
 app.include_router(contracts.router)
 app.include_router(charges.router)
+app.include_router(billing.router)
 app.include_router(dashboard.router)
 
 

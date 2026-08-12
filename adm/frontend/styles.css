@@ -203,6 +203,19 @@ tbody tr:hover { background: var(--surface-2); }
 }
 .charge-card-header strong { font-size: 0.95rem; margin-right: 8px; }
 
+.billing-items-box { display: flex; flex-direction: column; gap: 4px; }
+.billing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.billing-row:last-child { border-bottom: none; }
+.billing-row input { max-width: 160px; }
+.billing-input-needed { border-color: var(--warning) !important; }
+
 .badge {
   display: inline-block;
   padding: 3px 10px;

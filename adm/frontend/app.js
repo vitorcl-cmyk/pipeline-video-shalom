@@ -9,6 +9,7 @@ const state = {
   properties: [],
   currentContractId: null,
   charges: [],
+  invoices: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -710,7 +711,7 @@ async function openContractCharges(contractId) {
   document.getElementById("charges-subtitle").textContent = contract
     ? `${contract.property ? contract.property.endereco : ""} — ${contract.tenant ? contract.tenant.nome : ""}`
     : "";
-  await loadCharges();
+  await Promise.all([loadCharges(), loadInvoices()]);
 }
 
 async function loadCharges() {
@@ -871,6 +872,120 @@ async function deleteCharge(chargeId) {
   try {
     await api(`/charges/${chargeId}`, { method: "DELETE" });
     await loadCharges();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Billing (emissão de cobrança mensal: aluguel + contas fixas/variáveis)
+// ---------------------------------------------------------------------------
+
+function billingFieldsHtml() {
+  return `
+    <label>Mês de referência *</label>
+    <input name="competencia_month" type="month" required value="${currentMonthCompetencia()}" />
+    <label>Vencimento</label>
+    <input name="vencimento" type="date" />
+    <div id="billing-items" style="margin-top:16px;">Carregando...</div>
+  `;
+}
+
+async function renderBillingItems(form) {
+  const competencia = form.elements["competencia_month"].value;
+  const container = form.querySelector("#billing-items");
+  if (!competencia) return;
+  container.innerHTML = "Carregando...";
+  try {
+    const preview = await api(`/contracts/${state.currentContractId}/billing/preview?competencia=${competencia}`);
+    const rows = [
+      `<div class="billing-row"><span>Aluguel</span><strong>${money(preview.valor_aluguel)}</strong></div>`,
+      ...preview.itens.map(
+        (it) => `
+        <div class="billing-row">
+          <span>${it.nome} ${it.tipo === "variavel" ? '<span class="badge warn">Variável</span>' : '<span class="badge muted">Fixa</span>'}</span>
+          ${
+            it.needs_input
+              ? `<input name="valor__${it.charge_id}" type="number" step="0.01" placeholder="Valor deste mês" required class="billing-input-needed" />`
+              : `<strong>${money(it.valor)}</strong>`
+          }
+        </div>`
+      ),
+    ];
+    container.innerHTML = `
+      <div class="billing-items-box">${rows.join("")}</div>
+      ${preview.itens.some((it) => it.needs_input) ? '<p class="hint">Campos em laranja são contas variáveis — informe o valor deste mês antes de emitir.</p>' : ""}
+      ${preview.ja_emitida ? '<p class="hint">Já existe uma cobrança emitida para este mês — emitir de novo atualiza o valor.</p>' : ""}
+    `;
+  } catch (err) {
+    container.innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+}
+
+function openBillingModal() {
+  openModal(
+    "Emitir cobrança do mês",
+    billingFieldsHtml(),
+    async (fd) => {
+      const valores = {};
+      for (const [key, value] of fd.entries()) {
+        if (key.startsWith("valor__") && value !== "") valores[key.replace("valor__", "")] = parseFloat(value);
+      }
+      const payload = {
+        competencia: fd.get("competencia_month"),
+        vencimento: formValue(fd, "vencimento"),
+        valores,
+      };
+      await api(`/contracts/${state.currentContractId}/billing`, { method: "POST", body: payload });
+      await Promise.all([loadInvoices(), loadCharges()]);
+    },
+    (form) => {
+      renderBillingItems(form);
+      form.elements["competencia_month"].addEventListener("change", () => renderBillingItems(form));
+    }
+  );
+}
+
+document.getElementById("invoice-new-btn").addEventListener("click", () => openBillingModal());
+
+async function loadInvoices() {
+  const invoices = await api(`/contracts/${state.currentContractId}/billing`);
+  state.invoices = invoices;
+  const tbody = document.querySelector("#invoices-table tbody");
+  tbody.innerHTML = invoices.length
+    ? invoices.map((inv) => `
+        <tr>
+          <td>${competenciaLabel(inv.competencia)}</td>
+          <td>${money(inv.valor_aluguel)}</td>
+          <td>${money(inv.valor_contas)}</td>
+          <td><strong>${money(inv.valor_total)}</strong></td>
+          <td>${dateFmt(inv.vencimento)}</td>
+          <td>${badge(LAUNCH_STATUS_LABEL[inv.status] || [inv.status, "muted"])}</td>
+          <td class="row-actions">
+            ${inv.status !== "paga" ? `<button class="btn secondary small" data-invoice-pay="${inv.id}">Marcar paga</button>` : ""}
+            <button class="btn danger small" data-invoice-delete="${inv.id}">Excluir</button>
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="7" class="empty-state">Nenhuma cobrança emitida ainda.</td></tr>`;
+
+  tbody.querySelectorAll("[data-invoice-pay]").forEach((b) => b.addEventListener("click", () => markInvoicePaid(b.dataset.invoicePay)));
+  tbody.querySelectorAll("[data-invoice-delete]").forEach((b) => b.addEventListener("click", () => deleteInvoice(b.dataset.invoiceDelete)));
+}
+
+async function markInvoicePaid(id) {
+  try {
+    await api(`/invoices/${id}`, { method: "PUT", body: { status: "paga" } });
+    await loadInvoices();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteInvoice(id) {
+  if (!confirm("Excluir esta cobrança?")) return;
+  try {
+    await api(`/invoices/${id}`, { method: "DELETE" });
+    await loadInvoices();
   } catch (err) {
     alert(err.message);
   }
