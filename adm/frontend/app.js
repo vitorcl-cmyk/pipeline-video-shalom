@@ -238,10 +238,11 @@ function badge([label, kind]) {
 
 let modalSubmitHandler = null;
 
-function openModal(title, fieldsHtml, onSubmit, populate) {
+function openModal(title, fieldsHtml, onSubmit, populate, submitLabel) {
   document.getElementById("modal-title").textContent = title;
   document.getElementById("modal-form").innerHTML = fieldsHtml;
   document.getElementById("modal-error").textContent = "";
+  document.getElementById("modal-submit").textContent = submitLabel || "Salvar";
   document.getElementById("modal-backdrop").classList.remove("hidden");
   if (populate) populate(document.getElementById("modal-form"));
   modalSubmitHandler = onSubmit;
@@ -249,6 +250,8 @@ function openModal(title, fieldsHtml, onSubmit, populate) {
 
 function closeModal() {
   document.getElementById("modal-backdrop").classList.add("hidden");
+  document.getElementById("modal-submit").textContent = "Salvar";
+  document.getElementById("modal-cancel").classList.remove("hidden");
   modalSubmitHandler = null;
 }
 
@@ -803,12 +806,21 @@ async function loadCharges() {
 
   charges.forEach((c) => {
     document.querySelector(`[data-launch-new="${c.id}"]`)?.addEventListener("click", () => openLaunchModal(c.id));
+    document.querySelector(`[data-charge-edit="${c.id}"]`)?.addEventListener("click", () => openChargeModal(c.id));
     document.querySelector(`[data-charge-delete="${c.id}"]`)?.addEventListener("click", () => deleteCharge(c.id));
     (c.launches || []).forEach((l) => {
       document.querySelector(`[data-launch-pay="${l.id}"]`)?.addEventListener("click", () => markLaunchPaid(l.id));
       document.querySelector(`[data-launch-delete="${l.id}"]`)?.addEventListener("click", () => deleteLaunch(l.id));
     });
   });
+}
+
+const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+function mesesPausadosLabel(meses) {
+  if (!meses || !meses.length) return "";
+  const nomes = [...meses].sort((a, b) => a - b).map((m) => MESES_ABREV[m - 1]);
+  return `<span class="hint" style="margin-left:8px;">sem cobrança em ${nomes.join(", ")}</span>`;
 }
 
 function chargeCardHtml(c) {
@@ -821,9 +833,11 @@ function chargeCardHtml(c) {
           <strong>${c.nome}</strong>
           <span class="badge ${c.tipo === "fixa" ? "muted" : "warn"}">${CHARGE_KIND_LABEL[c.tipo]}</span>
           <span class="hint" style="margin-left:8px;">${valorLabel}</span>
+          ${mesesPausadosLabel(c.meses_pausados)}
         </div>
         <div class="row-actions">
           <button class="btn small" data-launch-new="${c.id}">+ Lançar mês</button>
+          <button class="btn secondary small" data-charge-edit="${c.id}">Editar</button>
           <button class="btn danger small" data-charge-delete="${c.id}">Excluir conta</button>
         </div>
       </div>
@@ -850,6 +864,9 @@ function chargeCardHtml(c) {
 }
 
 function chargeFieldsHtml() {
+  const mesesCheckboxes = MESES_ABREV.map(
+    (label, i) => `<label class="month-check"><input type="checkbox" name="meses_pausados" value="${i + 1}" /> ${label}</label>`
+  ).join("");
   return `
     <label>Nome *</label>
     <input name="nome" required placeholder="Água, Condomínio, IPTU..." />
@@ -864,29 +881,51 @@ function chargeFieldsHtml() {
     </div>
     <label>Dia de vencimento (opcional, se diferente do aluguel)</label>
     <input name="dia_vencimento" type="number" min="1" max="31" />
+    <label>Meses sem cobrança (opcional)</label>
+    <div class="month-grid">${mesesCheckboxes}</div>
+    <p class="hint">Ex.: IPTU parcelado que não cobra em dezembro/janeiro em São Paulo — marque os meses e a cobrança do mês pula essa conta automaticamente, sem pedir valor.</p>
     <label>Observações</label><textarea name="observacoes"></textarea>
     <p class="hint">Contas variáveis (água, condomínio quando rateado) não precisam de valor fixo aqui — você lança o valor de cada mês depois, na tela da conta.</p>
   `;
 }
 
-function openChargeModal() {
-  openModal("Nova conta", chargeFieldsHtml(), async (fd) => {
-    const tipo = fd.get("tipo");
-    const valorFixo = formValue(fd, "valor_fixo");
-    if (tipo === "fixa" && !valorFixo) throw new Error("Informe o valor fixo para uma conta do tipo Fixa");
-    const payload = {
-      nome: fd.get("nome"),
-      tipo,
-      valor_fixo: tipo === "fixa" ? parseFloat(valorFixo) : null,
-      dia_vencimento: fd.get("dia_vencimento") ? parseInt(fd.get("dia_vencimento"), 10) : null,
-      observacoes: formValue(fd, "observacoes"),
-    };
-    await api(`/contracts/${state.currentContractId}/charges`, { method: "POST", body: payload });
-    await loadCharges();
-  });
+function openChargeModal(id) {
+  const charge = id ? state.charges.find((c) => c.id === id) : null;
+  openModal(
+    charge ? "Editar conta" : "Nova conta",
+    chargeFieldsHtml(),
+    async (fd) => {
+      const tipo = fd.get("tipo");
+      const valorFixo = formValue(fd, "valor_fixo");
+      if (tipo === "fixa" && !valorFixo) throw new Error("Informe o valor fixo para uma conta do tipo Fixa");
+      const payload = {
+        nome: fd.get("nome"),
+        tipo,
+        valor_fixo: tipo === "fixa" ? parseFloat(valorFixo) : null,
+        dia_vencimento: fd.get("dia_vencimento") ? parseInt(fd.get("dia_vencimento"), 10) : null,
+        meses_pausados: fd.getAll("meses_pausados").map((v) => parseInt(v, 10)),
+        observacoes: formValue(fd, "observacoes"),
+      };
+      if (charge) await api(`/charges/${charge.id}`, { method: "PUT", body: payload });
+      else await api(`/contracts/${state.currentContractId}/charges`, { method: "POST", body: payload });
+      await loadCharges();
+    },
+    (form) => {
+      if (!charge) return;
+      form.elements["nome"].value = charge.nome;
+      form.elements["tipo"].value = charge.tipo;
+      if (charge.valor_fixo != null) form.elements["valor_fixo"].value = charge.valor_fixo;
+      if (charge.dia_vencimento != null) form.elements["dia_vencimento"].value = charge.dia_vencimento;
+      if (charge.observacoes) form.elements["observacoes"].value = charge.observacoes;
+      (charge.meses_pausados || []).forEach((m) => {
+        const cb = form.querySelector(`input[name="meses_pausados"][value="${m}"]`);
+        if (cb) cb.checked = true;
+      });
+    }
+  );
 }
 
-document.getElementById("charge-new-btn").addEventListener("click", () => openChargeModal());
+document.getElementById("charge-new-btn").addEventListener("click", () => openChargeModal(null));
 document.getElementById("charges-back-btn").addEventListener("click", () => navigate("contracts"));
 
 function currentMonthCompetencia() {
@@ -1043,14 +1082,66 @@ async function loadInvoices() {
           <td>${dateFmt(inv.vencimento)}</td>
           <td>${badge(LAUNCH_STATUS_LABEL[inv.status] || [inv.status, "muted"])}</td>
           <td class="row-actions">
+            <button class="btn secondary small" data-invoice-view="${inv.id}">Ver cobrança</button>
             ${inv.status !== "paga" ? `<button class="btn secondary small" data-invoice-pay="${inv.id}">Marcar paga</button>` : ""}
             <button class="btn danger small" data-invoice-delete="${inv.id}">Excluir</button>
           </td>
         </tr>`).join("")
     : `<tr><td colspan="7" class="empty-state">Nenhuma cobrança emitida ainda.</td></tr>`;
 
+  tbody.querySelectorAll("[data-invoice-view]").forEach((b) => b.addEventListener("click", () => openInvoiceReceipt(b.dataset.invoiceView)));
   tbody.querySelectorAll("[data-invoice-pay]").forEach((b) => b.addEventListener("click", () => markInvoicePaid(b.dataset.invoicePay)));
   tbody.querySelectorAll("[data-invoice-delete]").forEach((b) => b.addEventListener("click", () => deleteInvoice(b.dataset.invoiceDelete)));
+}
+
+function invoiceSummaryLine(inv) {
+  const parts = [`Aluguel ${money(inv.valor_aluguel)}`, ...inv.itens.map((it) => `${it.nome} ${money(it.valor)}`)];
+  return `${parts.join(" | ")} = ${money(inv.valor_total)}`;
+}
+
+function openInvoiceReceipt(id) {
+  const inv = state.invoices.find((i) => i.id === id);
+  if (!inv) return;
+  const contract = state.contracts.find((c) => c.id === state.currentContractId);
+  const endereco = contract?.property?.endereco || "";
+  const inquilino = contract?.tenant?.nome || "";
+  const summary = invoiceSummaryLine(inv);
+
+  const rows = [
+    { nome: "Aluguel", valor: inv.valor_aluguel },
+    ...inv.itens,
+  ];
+
+  const html = `
+    <p class="hint">${endereco}${inquilino ? " — " + inquilino : ""} · vencimento ${dateFmt(inv.vencimento)}</p>
+    <div class="card" style="margin-top:12px;">
+      <table>
+        <thead><tr><th>Descrição</th><th>Valor</th></tr></thead>
+        <tbody>
+          ${rows.map((r) => `<tr><td>${r.nome}</td><td>${money(r.valor)}</td></tr>`).join("")}
+          <tr><td><strong>Total</strong></td><td><strong>${money(inv.valor_total)}</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <label style="margin-top:16px;">Resumo (cole no campo de informações do boleto ou mande pro inquilino)</label>
+    <textarea id="invoice-summary-text" readonly style="min-height:50px;">${summary}</textarea>
+    <button type="button" class="btn secondary small" id="invoice-copy-btn" style="margin-top:8px;">Copiar resumo</button>
+  `;
+
+  openModal(`Cobrança — ${competenciaLabel(inv.competencia)}`, html, async () => {}, (form) => {
+    document.getElementById("modal-cancel").classList.add("hidden");
+    form.querySelector("#invoice-copy-btn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(summary);
+        const btn = form.querySelector("#invoice-copy-btn");
+        const original = btn.textContent;
+        btn.textContent = "Copiado!";
+        setTimeout(() => (btn.textContent = original), 1500);
+      } catch {
+        form.querySelector("#invoice-summary-text").select();
+      }
+    });
+  }, "Fechar");
 }
 
 async function markInvoicePaid(id) {

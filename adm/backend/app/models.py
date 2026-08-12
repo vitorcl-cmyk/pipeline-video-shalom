@@ -221,6 +221,9 @@ class Charge(Base):
     tipo: Mapped[str] = mapped_column(Enum(ChargeKind), default=ChargeKind.VARIAVEL, nullable=False)
     valor_fixo: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)  # usado quando tipo=fixa
     dia_vencimento: Mapped[int | None] = mapped_column(nullable=True)  # se diferente do vencimento do aluguel
+    # Meses (1-12) em que essa conta não é cobrada — ex.: IPTU parcelado que
+    # não tem parcela em dezembro/janeiro em São Paulo.
+    meses_pausados: Mapped[list] = mapped_column(JSON, default=list)
     ativa: Mapped[bool] = mapped_column(default=True)
     observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

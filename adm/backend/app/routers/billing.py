@@ -25,6 +25,13 @@ def _active_charges(db: Session, contract_id: str) -> list[Charge]:
     return db.query(Charge).filter(Charge.contract_id == contract_id, Charge.ativa.is_(True)).order_by(Charge.nome).all()
 
 
+def _is_paused(charge: Charge, competencia: str) -> bool:
+    """Ex.: IPTU parcelado que não cobra em dezembro/janeiro em São Paulo —
+    marcado em charge.meses_pausados (1-12)."""
+    mes = int(competencia.split("-")[1])
+    return mes in (charge.meses_pausados or [])
+
+
 @router.get("/contracts/{contract_id}/billing/preview", response_model=BillingPreviewOut)
 def preview_billing(contract_id: str, competencia: str, db: Session = Depends(get_db)):
     contract = db.get(Contract, contract_id)
@@ -38,6 +45,8 @@ def preview_billing(contract_id: str, competencia: str, db: Session = Depends(ge
             .filter(ChargeLaunch.charge_id == charge.id, ChargeLaunch.competencia == competencia)
             .first()
         )
+        if not launch and _is_paused(charge, competencia):
+            continue  # ex.: IPTU não cobra este mês — nem aparece pedindo valor
         if launch:
             itens.append(BillingItemPreview(charge_id=charge.id, nome=charge.nome, tipo=charge.tipo, valor=float(launch.valor), needs_input=False))
         elif charge.tipo == ChargeKind.FIXA and charge.valor_fixo is not None:
@@ -72,6 +81,8 @@ def generate_billing(contract_id: str, payload: BillingGenerateRequest, db: Sess
             .filter(ChargeLaunch.charge_id == charge.id, ChargeLaunch.competencia == payload.competencia)
             .first()
         )
+        if not launch and _is_paused(charge, payload.competencia):
+            continue  # ex.: IPTU não cobra este mês — não entra na cobrança
         if not launch:
             valor = payload.valores.get(charge.id)
             if valor is None and charge.tipo == ChargeKind.FIXA:

@@ -40,6 +40,13 @@ compartilha banco de dados nem código com o gerador de vídeos.
 - **Cobrança mensal consolidada**: emite a cobrança do mês (aluguel + contas)
   por contrato, pedindo o valor de cada conta variável pendente antes de
   fechar o total. Histórico de cobranças emitidas por contrato.
+  - Contas fixas podem ter **meses sem cobrança** (ex.: IPTU parcelado que
+    não cobra em dezembro/janeiro em São Paulo) — marque os meses na conta
+    e a cobrança do mês pula automaticamente, sem pedir valor.
+  - Botão **"Ver cobrança"** mostra o recibo itemizado (Descrição/Valor +
+    Total, no mesmo formato do boleto emitido no Banco Inter) com um resumo
+    em texto pronto pra copiar e colar no campo de informações do boleto ou
+    mandar direto pro inquilino.
 - **Reajuste de contrato**: a coluna "Reajuste" na lista de Contratos mostra
   a próxima data (12 meses após o início ou o último reajuste) e sinaliza em
   laranja/vermelho quando está próxima ou atrasada. Como não há como buscar

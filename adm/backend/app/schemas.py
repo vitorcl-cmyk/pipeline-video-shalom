@@ -269,6 +269,7 @@ class ChargeBase(BaseModel):
     tipo: ChargeKind = ChargeKind.VARIAVEL
     valor_fixo: float | None = None
     dia_vencimento: int | None = None
+    meses_pausados: list[int] = []  # 1-12, meses em que essa conta não é cobrada
     ativa: bool = True
     observacoes: str | None = None
 
@@ -282,6 +283,7 @@ class ChargeUpdate(BaseModel):
     tipo: ChargeKind | None = None
     valor_fixo: float | None = None
     dia_vencimento: int | None = None
+    meses_pausados: list[int] | None = None
     ativa: bool | None = None
     observacoes: str | None = None
 

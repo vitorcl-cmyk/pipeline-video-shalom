@@ -215,6 +215,10 @@ tbody tr.clickable-row { cursor: pointer; }
 }
 .charge-card-header strong { font-size: 0.95rem; margin-right: 8px; }
 
+.month-grid { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 4px; }
+.month-check { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text); margin: 0; }
+.month-check input { width: auto; }
+
 .billing-items-box { display: flex; flex-direction: column; gap: 4px; }
 .billing-row {
   display: flex;
