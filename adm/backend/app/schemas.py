@@ -33,6 +33,12 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    full_name: str | None = None
+    is_active: bool | None = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

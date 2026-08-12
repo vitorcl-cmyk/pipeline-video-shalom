@@ -44,6 +44,7 @@
       <button class="nav-btn" data-page="tenants">🧾 Inquilinos</button>
       <button class="nav-btn" data-page="properties">🏢 Imóveis</button>
       <button class="nav-btn" data-page="contracts">📄 Contratos</button>
+      <button class="nav-btn" data-page="users">🔑 Usuários</button>
       <div class="sidebar-footer">
         <div class="user-box" id="user-box"></div>
         <button class="btn secondary small" id="change-password-btn" style="width:100%;margin-bottom:6px;">Trocar senha</button>
@@ -105,7 +106,7 @@
           <button class="btn" id="contract-new-btn">+ Novo contrato</button>
         </div>
         <div class="card"><div class="table-scroll"><table id="contracts-table">
-          <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Imóvel</th><th>Inquilino</th><th>Aluguel</th><th>Receita adm.</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div></div>
       </section>
@@ -128,6 +129,18 @@
         <h2 style="margin-top:32px;">Cobranças emitidas</h2>
         <div class="card"><div class="table-scroll"><table id="invoices-table">
           <thead><tr><th>Mês</th><th>Aluguel</th><th>Contas</th><th>Total</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div></div>
+      </section>
+
+      <!-- Users (equipe com acesso ao painel) -->
+      <section id="page-users" class="page hidden">
+        <div class="page-header">
+          <h1>Usuários</h1>
+          <button class="btn" id="user-new-btn">+ Novo usuário</button>
+        </div>
+        <div class="card"><div class="table-scroll"><table id="users-table">
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div></div>
       </section>

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, billing, charges, contracts, dashboard, owners, properties, tenants
+from app.routers import auth, billing, charges, contracts, dashboard, owners, properties, tenants, users
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(owners.router)
 app.include_router(tenants.router)
 app.include_router(properties.router)

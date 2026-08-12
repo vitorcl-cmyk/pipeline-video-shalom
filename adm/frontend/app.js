@@ -10,6 +10,7 @@ const state = {
   currentContractId: null,
   charges: [],
   invoices: [],
+  users: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -181,6 +182,7 @@ const PAGE_LOADERS = {
   tenants: loadTenants,
   properties: loadProperties,
   contracts: loadContracts,
+  users: loadUsers,
 };
 
 function navigate(page) {
@@ -620,6 +622,7 @@ async function loadContracts() {
           <td>${c.property ? c.property.endereco : "—"}</td>
           <td>${c.tenant ? c.tenant.nome : "—"}</td>
           <td>${money(c.valor_aluguel)}</td>
+          <td>${money((c.valor_aluguel * c.taxa_administracao_percentual) / 100)}</td>
           <td>${dateFmt(c.data_inicio)} – ${c.data_fim ? dateFmt(c.data_fim) : "indeterminado"}</td>
           <td>${badge(CONTRACT_STATUS_LABEL[c.status] || [c.status, "muted"])}</td>
           <td class="row-actions">
@@ -628,7 +631,7 @@ async function loadContracts() {
             <button class="btn danger small" data-delete="${c.id}">Excluir</button>
           </td>
         </tr>`).join("")
-    : `<tr><td colspan="6" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
+    : `<tr><td colspan="7" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
   tbody.querySelectorAll("[data-charges]").forEach((b) => b.addEventListener("click", () => openContractCharges(b.dataset.charges)));
   tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openContractModal(b.dataset.edit)));
@@ -1039,6 +1042,91 @@ async function deleteInvoice(id) {
     alert(err.message);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Users (equipe com acesso ao painel)
+// ---------------------------------------------------------------------------
+
+async function loadUsers() {
+  const users = await api("/users");
+  state.users = users;
+  const tbody = document.querySelector("#users-table tbody");
+  tbody.innerHTML = users.length
+    ? users.map((u) => `
+        <tr>
+          <td>${u.full_name || "—"}${u.id === state.user?.id ? ' <span class="badge muted">você</span>' : ""}</td>
+          <td>${u.email}</td>
+          <td>${badge(u.is_active ? ["Ativo", "ok"] : ["Inativo", "muted"])}</td>
+          <td class="row-actions">
+            <button class="btn secondary small" data-edit="${u.id}">Editar</button>
+            <button class="btn danger small" data-delete="${u.id}">Excluir</button>
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="4" class="empty-state">Nenhum usuário cadastrado ainda.</td></tr>`;
+
+  tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => openUserModal(b.dataset.edit)));
+  tbody.querySelectorAll("[data-delete]").forEach((b) => b.addEventListener("click", () => deleteUser(b.dataset.delete)));
+}
+
+function userFieldsHtml(isEdit) {
+  return `
+    <label>Nome completo</label>
+    <input name="full_name" />
+    <label>E-mail *</label>
+    <input name="email" type="email" required autocomplete="off" />
+    ${isEdit
+      ? `<label>Status</label>
+         <select name="is_active">
+           <option value="true">Ativo</option>
+           <option value="false">Inativo</option>
+         </select>`
+      : `<label>Senha *</label><input name="password" type="password" required minlength="6" autocomplete="new-password" />`}
+  `;
+}
+
+function openUserModal(id) {
+  const user = id ? state.users.find((u) => u.id === id) : null;
+  openModal(
+    user ? "Editar usuário" : "Novo usuário",
+    userFieldsHtml(!!user),
+    async (fd) => {
+      if (user) {
+        const payload = {
+          email: fd.get("email"),
+          full_name: formValue(fd, "full_name"),
+          is_active: fd.get("is_active") === "true",
+        };
+        await api(`/users/${user.id}`, { method: "PUT", body: payload });
+      } else {
+        const payload = {
+          email: fd.get("email"),
+          full_name: formValue(fd, "full_name"),
+          password: fd.get("password"),
+        };
+        await api("/users", { method: "POST", body: payload });
+      }
+      await loadUsers();
+    },
+    (form) => {
+      if (!user) return;
+      form.elements["email"].value = user.email;
+      form.elements["full_name"].value = user.full_name || "";
+      form.elements["is_active"].value = String(user.is_active);
+    }
+  );
+}
+
+async function deleteUser(id) {
+  if (!confirm("Excluir este usuário? Ele perde o acesso ao painel imediatamente.")) return;
+  try {
+    await api(`/users/${id}`, { method: "DELETE" });
+    await loadUsers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+document.getElementById("user-new-btn").addEventListener("click", () => openUserModal(null));
 
 // ---------------------------------------------------------------------------
 // Utils
