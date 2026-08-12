@@ -183,6 +183,13 @@ class Contract(Base):
     # houve reajuste, usa-se data_inicio como base.
     data_ultimo_reajuste: Mapped[date | None] = mapped_column(Date, nullable=True)
 
+    # Depósito caução (Lei do Inquilinato, art. 38: caução em dinheiro deve
+    # ficar em caderneta de poupança) — valor é corrigido mensalmente pela
+    # taxa da poupança pra sempre saber quanto o proprietário deve devolver.
+    valor_caucao: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    data_deposito_caucao: Mapped[date | None] = mapped_column(Date, nullable=True)
+    data_ultima_correcao_caucao: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     status: Mapped[str] = mapped_column(Enum(ContractStatus), default=ContractStatus.ATIVO, nullable=False)
 
     fiador_nome: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -202,6 +209,9 @@ class Contract(Base):
     )
     invoices: Mapped[list["Invoice"]] = relationship(
         "Invoice", back_populates="contract", cascade="all, delete-orphan"
+    )
+    caucao_correcoes: Mapped[list["CaucaoCorrection"]] = relationship(
+        "CaucaoCorrection", back_populates="contract", cascade="all, delete-orphan"
     )
 
 
@@ -305,3 +315,27 @@ class ReadjustmentLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     contract: Mapped["Contract"] = relationship("Contract", back_populates="readjustments")
+
+
+class CaucaoCorrection(Base):
+    """Histórico de correção monetária mensal do depósito caução, pela taxa
+    de poupança publicada pelo Banco Central (Lei do Inquilinato, art. 38 —
+    caução em dinheiro deve ser aplicada em caderneta de poupança). Pode ser
+    aplicada automaticamente (busca a taxa na API pública do BCB) ou
+    manualmente (usuário informa o percentual)."""
+
+    __tablename__ = "caucao_corrections"
+    __table_args__ = (UniqueConstraint("contract_id", "competencia", name="uq_caucao_contract_competencia"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    contract_id: Mapped[str] = mapped_column(String(32), ForeignKey("contracts.id"), nullable=False, index=True)
+
+    competencia: Mapped[str] = mapped_column(String(7), nullable=False)  # "AAAA-MM"
+    taxa_percentual: Mapped[float] = mapped_column(Numeric(8, 5), nullable=False)
+    valor_anterior: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    valor_novo: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    fonte: Mapped[str] = mapped_column(String(255), default="Poupança (BCB)", nullable=False)
+    automatica: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="caucao_correcoes")

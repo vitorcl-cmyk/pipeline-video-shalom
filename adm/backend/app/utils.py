@@ -16,6 +16,19 @@ def next_readjustment_date(data_inicio: date, data_ultimo_reajuste: date | None)
     return add_years(base, 1)
 
 
+def add_months(d: date, months: int) -> date:
+    month_index = d.month - 1 + months
+    year = d.year + month_index // 12
+    month = month_index % 12 + 1
+    last_day = calendar.monthrange(year, month)[1]
+    return date(year, month, min(d.day, last_day))
+
+
+def next_caucao_correction_date(data_deposito: date, data_ultima_correcao: date | None) -> date:
+    base = data_ultima_correcao or data_deposito
+    return add_months(base, 1)
+
+
 def next_due_date(dia_vencimento: int, today: date | None = None) -> date:
     """Próxima data em que o boleto do aluguel vence, a partir de hoje —
     usa o dia de vencimento do contrato (ex.: todo dia 5)."""

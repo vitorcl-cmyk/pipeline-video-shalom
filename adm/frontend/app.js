@@ -717,6 +717,11 @@ function contractFieldsHtml() {
       </div>
     </div>
     <div class="form-grid">
+      <div><label>Depósito caução (R$)</label><input name="valor_caucao" type="number" step="0.01" /></div>
+      <div><label>Data do depósito</label><input name="data_deposito_caucao" type="date" /></div>
+    </div>
+    <p class="hint">Preencha os dois campos acima pra o sistema corrigir automaticamente o valor da caução todo mês (taxa da poupança, via API do Banco Central) — veja em "Contas" &gt; "Depósito caução".</p>
+    <div class="form-grid">
       <div><label>Fiador (nome)</label><input name="fiador_nome" /></div>
       <div><label>Fiador (CPF)</label><input name="fiador_cpf" /></div>
       <div><label>Fiador (telefone)</label><input name="fiador_telefone" /></div>
@@ -740,6 +745,8 @@ function openContractModal(id) {
         valor_aluguel: parseFloat(fd.get("valor_aluguel")),
         taxa_administracao_percentual: parseFloat(fd.get("taxa_administracao_percentual") || "10"),
         indice_reajuste: fd.get("indice_reajuste"),
+        valor_caucao: formValue(fd, "valor_caucao") ? parseFloat(fd.get("valor_caucao")) : null,
+        data_deposito_caucao: formValue(fd, "data_deposito_caucao"),
         status: fd.get("status"),
         fiador_nome: formValue(fd, "fiador_nome"),
         fiador_cpf: formValue(fd, "fiador_cpf"),
@@ -806,7 +813,7 @@ async function openContractCharges(contractId) {
   document.getElementById("charges-subtitle").textContent = contract
     ? `${contract.property ? contract.property.endereco : ""} — ${contract.tenant ? contract.tenant.nome : ""}`
     : "";
-  await Promise.all([loadCharges(), loadInvoices(), loadReadjustments()]);
+  await Promise.all([loadCharges(), loadInvoices(), loadReadjustments(), loadCaucao()]);
 }
 
 async function loadCharges() {
@@ -1234,6 +1241,92 @@ function openReadjustmentModal() {
 }
 
 document.getElementById("readjustment-new-btn").addEventListener("click", () => openReadjustmentModal());
+
+// ---------------------------------------------------------------------------
+// Depósito caução (correção mensal automática pela taxa da poupança)
+// ---------------------------------------------------------------------------
+
+function caucaoCorrectionDueLabel(contract) {
+  if (!contract.proxima_correcao_caucao) return "";
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const alvo = new Date(contract.proxima_correcao_caucao + "T00:00:00");
+  const dias = Math.round((alvo - hoje) / (1000 * 60 * 60 * 24));
+  const dataStr = dateFmt(contract.proxima_correcao_caucao);
+  if (dias <= 0) return `${badge(["Correção pendente", "warn"])} <span class="hint">desde ${dataStr}</span>`;
+  return `<span class="hint">próxima correção: ${dataStr}</span>`;
+}
+
+function renderCaucaoCard(contract) {
+  const el = document.getElementById("caucao-card");
+  if (!el) return;
+  if (!contract || !contract.valor_caucao) {
+    el.innerHTML = `<div class="empty-state">Nenhum depósito caução cadastrado para este contrato. Edite o contrato pra informar o valor e a data do depósito.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="charge-card-header">
+      <div>
+        <strong>${money(contract.valor_caucao)}</strong>
+        <span class="hint" style="margin-left:8px;">depositado em ${dateFmt(contract.data_deposito_caucao)}</span>
+        ${contract.data_ultima_correcao_caucao ? `<span class="hint" style="margin-left:8px;">última correção: ${dateFmt(contract.data_ultima_correcao_caucao)}</span>` : ""}
+      </div>
+      <div class="row-actions">${caucaoCorrectionDueLabel(contract)}</div>
+    </div>
+    <p class="hint">Valor corrigido mensalmente pela taxa da poupança (API pública do Banco Central) — é o que o proprietário precisa devolver ao inquilino, atualizado até a última correção aplicada.</p>
+  `;
+}
+
+async function loadCaucao() {
+  const contract = state.contracts.find((c) => c.id === state.currentContractId);
+  renderCaucaoCard(contract);
+  const items = await api(`/contracts/${state.currentContractId}/caucao-corrections`);
+  const tbody = document.querySelector("#caucao-corrections-table tbody");
+  tbody.innerHTML = items.length
+    ? items.map((r) => `
+        <tr>
+          <td>${competenciaLabel(r.competencia)}</td>
+          <td>${r.fonte}${r.automatica ? ` ${badge(["auto", "ok"])}` : ""}</td>
+          <td>${Number(r.taxa_percentual).toFixed(4)}%</td>
+          <td>${money(r.valor_anterior)}</td>
+          <td>${money(r.valor_novo)}</td>
+        </tr>`).join("")
+    : `<tr><td colspan="5" class="empty-state">Nenhuma correção aplicada ainda.</td></tr>`;
+}
+
+function replaceContractInState(updated) {
+  const idx = state.contracts.findIndex((c) => c.id === updated.id);
+  if (idx !== -1) state.contracts[idx] = updated;
+}
+
+async function applyCaucaoCorrection() {
+  const contract = state.contracts.find((c) => c.id === state.currentContractId);
+  if (!contract || !contract.valor_caucao || !contract.data_deposito_caucao) {
+    alert('Informe o valor e a data do depósito caução no contrato (botão "Editar") antes de corrigir.');
+    return;
+  }
+  try {
+    const updated = await api(`/contracts/${state.currentContractId}/caucao-corrections`, { method: "POST", body: {} });
+    replaceContractInState(updated);
+    await loadCaucao();
+  } catch (err) {
+    // Busca automática na API do Banco Central falhou (ex.: fora do ar) — permite informar a taxa na mão.
+    openModal("Corrigir caução manualmente", `
+      <p class="hint">${err.message}</p>
+      <label>Percentual da correção (%) *</label>
+      <input name="taxa_percentual" type="number" step="0.0001" required placeholder="Consulte a taxa da poupança do mês no Banco Central" />
+    `, async (fd) => {
+      const updated = await api(`/contracts/${state.currentContractId}/caucao-corrections`, {
+        method: "POST",
+        body: { taxa_percentual: parseFloat(fd.get("taxa_percentual")) },
+      });
+      replaceContractInState(updated);
+      await loadCaucao();
+    });
+  }
+}
+
+document.getElementById("caucao-correction-btn").addEventListener("click", () => applyCaucaoCorrection());
 
 // ---------------------------------------------------------------------------
 // Users (equipe com acesso ao painel)

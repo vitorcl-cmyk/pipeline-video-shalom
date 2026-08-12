@@ -11,7 +11,7 @@ from app.models import (
     PropertyType,
     ReadjustmentIndex,
 )
-from app.utils import next_due_date, next_readjustment_date
+from app.utils import next_caucao_correction_date, next_due_date, next_readjustment_date
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -191,6 +191,8 @@ class ContractBase(BaseModel):
     taxa_administracao_percentual: float = 10.0
     indice_reajuste: ReadjustmentIndex = ReadjustmentIndex.IGPM
     data_ultimo_reajuste: date | None = None
+    valor_caucao: float | None = None
+    data_deposito_caucao: date | None = None
     status: ContractStatus = ContractStatus.ATIVO
     fiador_nome: str | None = None
     fiador_cpf: str | None = None
@@ -212,6 +214,8 @@ class ContractUpdate(BaseModel):
     taxa_administracao_percentual: float | None = None
     indice_reajuste: ReadjustmentIndex | None = None
     data_ultimo_reajuste: date | None = None
+    valor_caucao: float | None = None
+    data_deposito_caucao: date | None = None
     status: ContractStatus | None = None
     fiador_nome: str | None = None
     fiador_cpf: str | None = None
@@ -240,6 +244,14 @@ class ContractOut(ContractBase):
     def proximo_vencimento(self) -> date:
         return next_due_date(self.dia_vencimento)
 
+    @computed_field
+    @property
+    def proxima_correcao_caucao(self) -> date | None:
+        if not self.valor_caucao or not self.data_deposito_caucao:
+            return None
+        return next_caucao_correction_date(self.data_deposito_caucao, self.data_ultima_correcao_caucao)
+
+    data_ultima_correcao_caucao: date | None = None
     property: PropertyOut | None = None
     tenant: TenantOut | None = None
 
@@ -261,6 +273,26 @@ class ReadjustmentLogOut(BaseModel):
     valor_anterior: float
     valor_novo: float
     observacoes: str | None
+    created_at: datetime
+
+
+class CaucaoCorrectionApply(BaseModel):
+    competencia: str | None = None  # "AAAA-MM"; default = mês atual
+    # Se omitido, tenta buscar a taxa da poupança automaticamente na API do BCB.
+    taxa_percentual: float | None = None
+
+
+class CaucaoCorrectionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    contract_id: str
+    competencia: str
+    taxa_percentual: float
+    valor_anterior: float
+    valor_novo: float
+    fonte: str
+    automatica: bool
     created_at: datetime
 
 

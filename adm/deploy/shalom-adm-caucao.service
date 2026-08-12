@@ -1,0 +1,11 @@
+[Unit]
+Description=Shalom ADM - correção mensal do depósito caução (poupança BCB)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/shalom-adm/adm/backend
+EnvironmentFile=/opt/shalom-adm/adm/backend/.env
+ExecStart=/opt/shalom-adm/adm/backend/.venv/bin/python -m scripts.correct_caucoes

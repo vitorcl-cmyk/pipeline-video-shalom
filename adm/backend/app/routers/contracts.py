@@ -10,9 +10,18 @@ from sqlalchemy.orm import Session, joinedload
 from datetime import date as date_cls
 
 from app.auth import get_current_user
+from app.caucao_service import CaucaoCorrectionError, apply_correction
 from app.database import get_db
-from app.models import Contract, ContractStatus, Property, PropertyStatus, ReadjustmentLog, Tenant, User
-from app.schemas import ContractCreate, ContractOut, ContractUpdate, ReadjustmentApply, ReadjustmentLogOut
+from app.models import CaucaoCorrection, Contract, ContractStatus, Property, PropertyStatus, ReadjustmentLog, Tenant, User
+from app.schemas import (
+    CaucaoCorrectionApply,
+    CaucaoCorrectionOut,
+    ContractCreate,
+    ContractOut,
+    ContractUpdate,
+    ReadjustmentApply,
+    ReadjustmentLogOut,
+)
 from app.utils import next_due_date
 
 router = APIRouter(prefix="/contracts", tags=["contracts"], dependencies=[Depends(get_current_user)])
@@ -175,6 +184,40 @@ def apply_readjustment(contract_id: str, payload: ReadjustmentApply, db: Session
 
     contract.valor_aluguel = valor_novo
     contract.data_ultimo_reajuste = data_reajuste
+
+    db.commit()
+    db.refresh(contract)
+    return _base_query(db).filter(Contract.id == contract_id).first()
+
+
+@router.get("/{contract_id}/caucao-corrections", response_model=list[CaucaoCorrectionOut])
+def list_caucao_corrections(contract_id: str, db: Session = Depends(get_db)):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
+    return (
+        db.query(CaucaoCorrection)
+        .filter(CaucaoCorrection.contract_id == contract_id)
+        .order_by(CaucaoCorrection.competencia.desc())
+        .all()
+    )
+
+
+@router.post(
+    "/{contract_id}/caucao-corrections", response_model=ContractOut, status_code=status.HTTP_201_CREATED
+)
+def apply_caucao_correction(contract_id: str, payload: CaucaoCorrectionApply, db: Session = Depends(get_db)):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
+
+    try:
+        apply_correction(
+            db, contract, competencia=payload.competencia, taxa_percentual=payload.taxa_percentual
+        )
+    except CaucaoCorrectionError as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
     db.commit()
     db.refresh(contract)

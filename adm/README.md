@@ -65,6 +65,19 @@ compartilha banco de dados nem código com o gerador de vídeos.
 - **Repasse ao proprietário**: cada cobrança emitida já mostra quanto vai
   pro proprietário (aluguel − taxa de administração; as contas do mês não
   entram no repasse, são repassadas direto pra quem cobra).
+- **Depósito caução com correção monetária automática**: informe o valor e
+  a data do depósito no contrato e o sistema mantém atualizado, mês a mês,
+  quanto o proprietário precisa devolver ao inquilino — sem precisar
+  digitar nada manualmente. A correção usa a taxa oficial da poupança
+  (Lei do Inquilinato, art. 38), buscada automaticamente na API pública do
+  Banco Central (SGS, série 195 — diferente da "Calculadora do Cidadão",
+  que é só um formulário HTML sem API pra automação). No servidor de
+  produção, um timer do systemd roda essa busca sozinho todo dia 1 do mês
+  (`adm/deploy/setup-caucao-timer.sh`); se a API do BCB estiver fora do ar
+  num mês, o botão "Corrigir caução" na tela de Contas permite informar o
+  percentual manualmente como alternativa, e a próxima execução automática
+  recupera o período em atraso. Histórico completo de correções (fonte,
+  percentual, valor anterior/novo) por contrato.
 
 ## Estrutura
 
@@ -201,3 +214,22 @@ journalctl -u cloudflared-quicktunnel --no-pager -n 50 | grep trycloudflare
 Para uma URL fixa de verdade (ex.: `adm.shalomconsultoria.com.br`), é
 necessário migrar o DNS do domínio para o Cloudflare — combine essa etapa
 separadamente antes de fazer, pois mexe num domínio de produção.
+
+### Correção automática do depósito caução
+
+Depois do primeiro `deploy.sh`, rode uma vez pra ligar a correção mensal
+automática da caução (busca a taxa da poupança na API do Banco Central):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitorcl-cmyk/pipeline-video-shalom/claude/shalom-adm-build-kq0j6m/adm/deploy/setup-caucao-timer.sh | bash
+```
+
+Isso instala um timer do systemd (`shalom-adm-caucao.timer`) que roda a
+correção sozinho todo dia 1 do mês às 3h, e já testa rodando uma vez na
+hora. Comandos úteis:
+
+```bash
+systemctl list-timers shalom-adm-caucao.timer   # ver quando roda de novo
+journalctl -u shalom-adm-caucao.service -f       # ver o resultado da última execução
+systemctl start shalom-adm-caucao.service         # rodar manualmente agora
+```

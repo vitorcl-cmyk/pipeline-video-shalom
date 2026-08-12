@@ -122,10 +122,20 @@
           <div class="row-actions">
             <button class="btn" id="invoice-new-btn">Emitir cobrança do mês</button>
             <button class="btn secondary" id="readjustment-new-btn">Reajustar contrato</button>
+            <button class="btn secondary" id="caucao-correction-btn">Corrigir caução</button>
             <button class="btn secondary" id="charge-new-btn">+ Nova conta</button>
           </div>
         </div>
         <div id="charges-list"></div>
+
+        <h2 style="margin-top:32px;">Depósito caução</h2>
+        <div class="card" id="caucao-card"></div>
+
+        <h2 style="margin-top:32px;">Histórico de correções da caução</h2>
+        <div class="card"><div class="table-scroll"><table id="caucao-corrections-table">
+          <thead><tr><th>Competência</th><th>Fonte</th><th>%</th><th>Valor anterior</th><th>Valor novo</th></tr></thead>
+          <tbody></tbody>
+        </table></div></div>
 
         <h2 style="margin-top:32px;">Cobranças emitidas</h2>
         <div class="card"><div class="table-scroll"><table id="invoices-table">
