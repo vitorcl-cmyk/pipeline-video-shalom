@@ -109,12 +109,14 @@ def generate_billing(contract_id: str, payload: BillingGenerateRequest, db: Sess
 
     valor_aluguel = float(contract.valor_aluguel)
     valor_total = valor_aluguel + valor_contas
+    valor_repasse = round(valor_aluguel * (1 - float(contract.taxa_administracao_percentual) / 100), 2)
 
     invoice = db.query(Invoice).filter(Invoice.contract_id == contract_id, Invoice.competencia == payload.competencia).first()
     if invoice:
         invoice.valor_aluguel = valor_aluguel
         invoice.valor_contas = valor_contas
         invoice.valor_total = valor_total
+        invoice.valor_repasse = valor_repasse
         invoice.itens = itens
         if payload.vencimento:
             invoice.vencimento = payload.vencimento
@@ -125,6 +127,7 @@ def generate_billing(contract_id: str, payload: BillingGenerateRequest, db: Sess
             valor_aluguel=valor_aluguel,
             valor_contas=valor_contas,
             valor_total=valor_total,
+            valor_repasse=valor_repasse,
             itens=itens,
             vencimento=payload.vencimento,
         )

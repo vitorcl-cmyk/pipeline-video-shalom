@@ -272,6 +272,12 @@ class Invoice(Base):
     valor_aluguel: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     valor_contas: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     valor_total: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # Repasse ao proprietário = aluguel - taxa de administração. As contas
+    # (IPTU, condomínio, água...) são repasse direto pro condomínio/prefeitura/
+    # concessionária, não entram no repasse do proprietário. Guardado como
+    # snapshot (junto com valor_aluguel/valor_total) pra não mudar o
+    # histórico se a taxa do contrato for alterada depois.
+    valor_repasse: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     itens: Mapped[list] = mapped_column(JSON, default=list)  # [{nome, tipo, valor}, ...]
 
     vencimento: Mapped[date | None] = mapped_column(Date, nullable=True)

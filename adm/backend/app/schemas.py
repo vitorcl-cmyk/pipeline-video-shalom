@@ -11,7 +11,7 @@ from app.models import (
     PropertyType,
     ReadjustmentIndex,
 )
-from app.utils import next_readjustment_date
+from app.utils import next_due_date, next_readjustment_date
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -235,6 +235,11 @@ class ContractOut(ContractBase):
             return None
         return next_readjustment_date(self.data_inicio, self.data_ultimo_reajuste)
 
+    @computed_field
+    @property
+    def proximo_vencimento(self) -> date:
+        return next_due_date(self.dia_vencimento)
+
     property: PropertyOut | None = None
     tenant: TenantOut | None = None
 
@@ -371,6 +376,7 @@ class InvoiceOut(BaseModel):
     valor_aluguel: float
     valor_contas: float
     valor_total: float
+    valor_repasse: float
     itens: list[InvoiceItemOut]
     vencimento: date | None
     status: ChargeLaunchStatus

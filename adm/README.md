@@ -59,6 +59,12 @@ compartilha banco de dados nem código com o gerador de vídeos.
 - **Receita por contrato**: coluna "Receita adm." na lista de Contratos
   mostra quanto cada locação gera pra Shalom (aluguel × taxa de
   administração).
+- **Próximo vencimento**: a lista de Contratos vem sempre ordenada pelo
+  contrato ativo cujo boleto vence mais cedo (baseado no dia de vencimento
+  do contrato) — quem precisa de atenção primeiro aparece no topo.
+- **Repasse ao proprietário**: cada cobrança emitida já mostra quanto vai
+  pro proprietário (aluguel − taxa de administração; as contas do mês não
+  entram no repasse, são repassadas direto pra quem cobra).
 
 ## Estrutura
 
@@ -130,22 +136,22 @@ script de importação em `adm/backend/scripts/` a partir deles.
 
 ## Roadmap (próximos módulos)
 
-1. **Repasse ao proprietário**: já existe a cobrança consolidada (aluguel +
-   contas do mês); falta gerar o repasse (aluguel menos taxa de
-   administração) pra cada proprietário.
-2. **Conciliação bancária com o Banco Inter**: usar a
+1. **Conciliação bancária com o Banco Inter**: usar a
    [API oficial do Banco Inter](https://developers.inter.co/) (conta PJ) para
    consultar extrato/pagamentos automaticamente e casar com as cobranças em
    aberto. Pré-requisito: certificado + credenciais de API geradas no
    Internet Banking PJ do Inter (registro de aplicação) — isso depende de
    ação da Shalom junto ao banco, não é algo que o código resolve sozinho.
-3. **Documentos**: upload de contrato assinado, comprovantes, laudos de
+   O boleto em si (barras/Pix) continua sendo emitido manualmente no site
+   do Inter — o "Ver cobrança" já deixa o valor e o resumo prontos pra
+   colar lá.
+2. **Documentos**: upload de contrato assinado, comprovantes, laudos de
    vistoria por imóvel/contrato.
-4. **Permissões**: hoje qualquer usuário logado vê e edita tudo (inclusive
+3. **Permissões**: hoje qualquer usuário logado vê e edita tudo (inclusive
    outros usuários); se a equipe crescer, adicionar papéis (admin / operacional).
-5. **Portal do proprietário / inquilino**: acesso separado e mais simples
+4. **Portal do proprietário / inquilino**: acesso separado e mais simples
    pra cada um ver só os próprios dados, sem o painel completo da equipe.
-6. **Régua de inadimplência**: lembretes automáticos (WhatsApp/e-mail) pra
+5. **Régua de inadimplência**: lembretes automáticos (WhatsApp/e-mail) pra
    cobranças vencidas — depende de integração paga de envio.
 
 ## Produção

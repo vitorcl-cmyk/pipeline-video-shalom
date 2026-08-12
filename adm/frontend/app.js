@@ -215,6 +215,18 @@ function readjustmentLabel(c) {
   return `<span class="hint">${dataFmt}</span>`;
 }
 
+function nextDueLabel(c) {
+  if (!c.proximo_vencimento) return '<span class="hint">—</span>';
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const alvo = new Date(c.proximo_vencimento + "T00:00:00");
+  const dias = Math.round((alvo - hoje) / (1000 * 60 * 60 * 24));
+  const dataFmt = dateFmt(c.proximo_vencimento);
+  if (dias <= 0) return `${badge(["Hoje", "danger"])} <span class="hint">${dataFmt}</span>`;
+  if (dias <= 7) return `${badge([`Em ${dias}d`, "warn"])} <span class="hint">${dataFmt}</span>`;
+  return `<span class="hint">${dataFmt}</span>`;
+}
+
 const PROPERTY_STATUS_LABEL = {
   disponivel: ["Disponível", "ok"],
   alugado: ["Alugado", "warn"],
@@ -653,6 +665,7 @@ async function loadContracts() {
           <td>${c.tenant ? c.tenant.nome : "—"}</td>
           <td>${money(c.valor_aluguel)}</td>
           <td>${money((c.valor_aluguel * c.taxa_administracao_percentual) / 100)}</td>
+          <td>${nextDueLabel(c)}</td>
           <td>${dateFmt(c.data_inicio)} – ${c.data_fim ? dateFmt(c.data_fim) : "indeterminado"}</td>
           <td>${readjustmentLabel(c)}</td>
           <td>${badge(CONTRACT_STATUS_LABEL[c.status] || [c.status, "muted"])}</td>
@@ -662,7 +675,7 @@ async function loadContracts() {
             <button class="btn danger small" data-delete="${c.id}">Excluir</button>
           </td>
         </tr>`).join("")
-    : `<tr><td colspan="8" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
+    : `<tr><td colspan="9" class="empty-state">Nenhum contrato cadastrado ainda.</td></tr>`;
 
   wireClickableRows(tbody, (id) => openContractModal(id));
   tbody.querySelectorAll("[data-charges]").forEach((b) => b.addEventListener("click", () => openContractCharges(b.dataset.charges)));
@@ -1079,6 +1092,7 @@ async function loadInvoices() {
           <td>${money(inv.valor_aluguel)}</td>
           <td>${money(inv.valor_contas)}</td>
           <td><strong>${money(inv.valor_total)}</strong></td>
+          <td>${money(inv.valor_repasse)}</td>
           <td>${dateFmt(inv.vencimento)}</td>
           <td>${badge(LAUNCH_STATUS_LABEL[inv.status] || [inv.status, "muted"])}</td>
           <td class="row-actions">
@@ -1087,7 +1101,7 @@ async function loadInvoices() {
             <button class="btn danger small" data-invoice-delete="${inv.id}">Excluir</button>
           </td>
         </tr>`).join("")
-    : `<tr><td colspan="7" class="empty-state">Nenhuma cobrança emitida ainda.</td></tr>`;
+    : `<tr><td colspan="8" class="empty-state">Nenhuma cobrança emitida ainda.</td></tr>`;
 
   tbody.querySelectorAll("[data-invoice-view]").forEach((b) => b.addEventListener("click", () => openInvoiceReceipt(b.dataset.invoiceView)));
   tbody.querySelectorAll("[data-invoice-pay]").forEach((b) => b.addEventListener("click", () => markInvoicePaid(b.dataset.invoicePay)));
@@ -1111,6 +1125,7 @@ function openInvoiceReceipt(id) {
     { nome: "Aluguel", valor: inv.valor_aluguel },
     ...inv.itens,
   ];
+  const proprietario = contract?.property?.owner?.nome || "";
 
   const html = `
     <p class="hint">${endereco}${inquilino ? " — " + inquilino : ""} · vencimento ${dateFmt(inv.vencimento)}</p>
@@ -1119,10 +1134,18 @@ function openInvoiceReceipt(id) {
         <thead><tr><th>Descrição</th><th>Valor</th></tr></thead>
         <tbody>
           ${rows.map((r) => `<tr><td>${r.nome}</td><td>${money(r.valor)}</td></tr>`).join("")}
-          <tr><td><strong>Total</strong></td><td><strong>${money(inv.valor_total)}</strong></td></tr>
+          <tr><td><strong>Total (cobrado do inquilino)</strong></td><td><strong>${money(inv.valor_total)}</strong></td></tr>
         </tbody>
       </table>
     </div>
+    <div class="card" style="margin-top:12px;">
+      <table>
+        <tbody>
+          <tr><td>Repasse ao proprietário${proprietario ? " (" + proprietario + ")" : ""}</td><td><strong>${money(inv.valor_repasse)}</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Repasse = aluguel − taxa de administração. As contas (IPTU, condomínio, água...) não entram aqui — são repassadas direto pra quem cobra (condomínio, prefeitura, concessionária).</p>
     <label style="margin-top:16px;">Resumo (cole no campo de informações do boleto ou mande pro inquilino)</label>
     <textarea id="invoice-summary-text" readonly style="min-height:50px;">${summary}</textarea>
     <button type="button" class="btn secondary small" id="invoice-copy-btn" style="margin-top:8px;">Copiar resumo</button>

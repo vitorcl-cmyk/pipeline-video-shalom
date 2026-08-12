@@ -13,6 +13,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import Contract, ContractStatus, Property, PropertyStatus, ReadjustmentLog, Tenant, User
 from app.schemas import ContractCreate, ContractOut, ContractUpdate, ReadjustmentApply, ReadjustmentLogOut
+from app.utils import next_due_date
 
 router = APIRouter(prefix="/contracts", tags=["contracts"], dependencies=[Depends(get_current_user)])
 
@@ -47,7 +48,21 @@ def list_contracts(
         query = query.filter(Contract.property_id == property_id)
     if tenant_id:
         query = query.filter(Contract.tenant_id == tenant_id)
-    return query.order_by(Contract.data_inicio.desc()).all()
+    contracts = query.all()
+
+    # Contratos ativos primeiro, ordenados por quem vence o boleto mais
+    # cedo — é o que precisa de atenção primeiro. O resto (encerrado/
+    # inadimplente) vem depois, mais recente primeiro.
+    ativos = sorted(
+        (c for c in contracts if c.status == ContractStatus.ATIVO),
+        key=lambda c: next_due_date(c.dia_vencimento),
+    )
+    outros = sorted(
+        (c for c in contracts if c.status != ContractStatus.ATIVO),
+        key=lambda c: c.data_inicio,
+        reverse=True,
+    )
+    return ativos + outros
 
 
 @router.post("", response_model=ContractOut, status_code=status.HTTP_201_CREATED)

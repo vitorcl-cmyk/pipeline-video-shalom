@@ -1,4 +1,5 @@
 """Helpers pequenos compartilhados entre schemas e routers."""
+import calendar
 from datetime import date
 
 
@@ -13,3 +14,24 @@ def add_years(d: date, years: int) -> date:
 def next_readjustment_date(data_inicio: date, data_ultimo_reajuste: date | None) -> date:
     base = data_ultimo_reajuste or data_inicio
     return add_years(base, 1)
+
+
+def next_due_date(dia_vencimento: int, today: date | None = None) -> date:
+    """Próxima data em que o boleto do aluguel vence, a partir de hoje —
+    usa o dia de vencimento do contrato (ex.: todo dia 5)."""
+    today = today or date.today()
+    dia = max(1, min(dia_vencimento or 1, 31))
+
+    def _clamp(year: int, month: int) -> date:
+        last_day = calendar.monthrange(year, month)[1]
+        return date(year, month, min(dia, last_day))
+
+    candidate = _clamp(today.year, today.month)
+    if candidate < today:
+        month = today.month + 1
+        year = today.year
+        if month > 12:
+            month = 1
+            year += 1
+        candidate = _clamp(year, month)
+    return candidate
