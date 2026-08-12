@@ -32,12 +32,24 @@ systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}"
 systemctl restart "${SERVICE_NAME}"
 
-echo "==> Aguardando o túnel subir..."
-sleep 6
+echo "==> Aguardando o túnel subir (pode levar até 30s)..."
+URL=""
+for i in $(seq 1 15); do
+  sleep 2
+  URL=$(journalctl -u "${SERVICE_NAME}" --no-pager -n 80 2>/dev/null | grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' | tail -n 1 || true)
+  if [ -n "$URL" ]; then
+    break
+  fi
+done
 
 echo ""
-echo "==> URL atual do túnel:"
-journalctl -u "${SERVICE_NAME}" --no-pager -n 50 | grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' | tail -n 1
+if [ -n "$URL" ]; then
+  echo "==> URL atual do túnel: ${URL}"
+else
+  echo "==> Ainda não consegui capturar a URL automaticamente."
+  echo "    Rode este comando em alguns segundos para ver:"
+  echo "    journalctl -u ${SERVICE_NAME} --no-pager -n 50 | grep trycloudflare"
+fi
 
 echo ""
 echo "Comandos úteis:"
