@@ -102,6 +102,34 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 document.getElementById("logout-btn").addEventListener("click", logout);
 
 // ---------------------------------------------------------------------------
+// Trocar senha (usuário já logado)
+// ---------------------------------------------------------------------------
+
+function changePasswordFieldsHtml() {
+  return `
+    <label>Senha atual</label>
+    <input name="current_password" type="password" required autocomplete="current-password" />
+    <label>Nova senha</label>
+    <input name="new_password" type="password" required minlength="6" autocomplete="new-password" />
+  `;
+}
+
+function openChangePasswordModal() {
+  openModal("Trocar senha", changePasswordFieldsHtml(), async (fd) => {
+    await api("/auth/change-password", {
+      method: "POST",
+      body: {
+        current_password: fd.get("current_password"),
+        new_password: fd.get("new_password"),
+      },
+    });
+    alert("Senha alterada com sucesso.");
+  });
+}
+
+document.getElementById("change-password-btn").addEventListener("click", () => openChangePasswordModal());
+
+// ---------------------------------------------------------------------------
 // Esqueci minha senha (sem envio de e-mail configurado: o código de
 // redefinição fica registrado no log do servidor, journalctl -u shalom-adm-api)
 // ---------------------------------------------------------------------------
