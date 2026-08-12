@@ -4,12 +4,16 @@ Cadastros essenciais: proprietários, inquilinos, imóveis e contratos de
 locação. Módulos futuros (cobrança, conciliação bancária) serão adicionados
 como novos routers sem alterar esta base.
 """
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
 from app.routers import auth, billing, charges, contracts, dashboard, owners, properties, tenants
+
+logging.basicConfig(level=logging.INFO)
 
 Base.metadata.create_all(bind=engine)
 

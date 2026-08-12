@@ -82,16 +82,6 @@ function logout() {
   showAuthShell();
 }
 
-document.querySelectorAll(".tab-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const isLogin = btn.dataset.tab === "login";
-    document.getElementById("login-form").classList.toggle("hidden", !isLogin);
-    document.getElementById("register-form").classList.toggle("hidden", isLogin);
-  });
-});
-
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const errEl = document.getElementById("login-error");
@@ -109,26 +99,49 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   }
 });
 
-document.getElementById("register-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const errEl = document.getElementById("register-error");
-  errEl.textContent = "";
-  const full_name = document.getElementById("reg-name").value;
-  const email = document.getElementById("reg-email").value;
-  const password = document.getElementById("reg-password").value;
-  try {
-    await api("/auth/register", { method: "POST", body: { full_name, email, password } });
-    const form = new URLSearchParams({ username: email, password });
-    const { access_token } = await api("/auth/login", { method: "POST", form });
-    state.token = access_token;
-    localStorage.setItem("shalom_adm_token", access_token);
-    await bootstrap();
-  } catch (err) {
-    errEl.textContent = err.message;
-  }
-});
-
 document.getElementById("logout-btn").addEventListener("click", logout);
+
+// ---------------------------------------------------------------------------
+// Esqueci minha senha (sem envio de e-mail configurado: o código de
+// redefinição fica registrado no log do servidor, journalctl -u shalom-adm-api)
+// ---------------------------------------------------------------------------
+
+function forgotPasswordStep1Html() {
+  return `
+    <label>E-mail</label>
+    <input name="email" type="email" required autocomplete="username" />
+    <p class="hint">Vamos gerar um código de redefinição. Como ainda não há envio de e-mail configurado, peça pra quem tem acesso ao servidor pegar o código nos logs.</p>
+  `;
+}
+
+function forgotPasswordStep2Html() {
+  return `
+    <p class="hint">Peça pra quem tem acesso ao servidor rodar no terminal:<br /><code>journalctl -u shalom-adm-api | grep "Código de redefinição"</code></p>
+    <label>Código</label>
+    <input name="token" required />
+    <label>Nova senha</label>
+    <input name="new_password" type="password" required minlength="6" autocomplete="new-password" />
+  `;
+}
+
+function openForgotPasswordModal() {
+  openModal("Esqueci minha senha", forgotPasswordStep1Html(), async (fd) => {
+    await api("/auth/forgot-password", { method: "POST", body: { email: fd.get("email") } });
+    document.getElementById("modal-title").textContent = "Redefinir senha";
+    document.getElementById("modal-form").innerHTML = forgotPasswordStep2Html();
+    document.getElementById("modal-error").textContent = "";
+    setModalSubmitHandler(async (fd2) => {
+      await api("/auth/reset-password", {
+        method: "POST",
+        body: { token: fd2.get("token"), new_password: fd2.get("new_password") },
+      });
+      alert("Senha redefinida com sucesso. Faça login com a nova senha.");
+    });
+    return "keep-open";
+  });
+}
+
+document.getElementById("forgot-password-btn").addEventListener("click", () => openForgotPasswordModal());
 
 // ---------------------------------------------------------------------------
 // Navigation
@@ -197,6 +210,12 @@ function closeModal() {
   modalSubmitHandler = null;
 }
 
+// Troca o handler de submit sem reabrir o modal — usado em fluxos com mais
+// de um passo (ex.: esqueci minha senha).
+function setModalSubmitHandler(fn) {
+  modalSubmitHandler = fn;
+}
+
 document.getElementById("modal-cancel").addEventListener("click", closeModal);
 document.getElementById("modal-backdrop").addEventListener("click", (e) => {
   if (e.target.id === "modal-backdrop") closeModal();
@@ -208,8 +227,8 @@ document.getElementById("modal-form").addEventListener("submit", async (e) => {
   errEl.textContent = "";
   if (!modalSubmitHandler) return;
   try {
-    await modalSubmitHandler(new FormData(e.target));
-    closeModal();
+    const result = await modalSubmitHandler(new FormData(e.target));
+    if (result !== "keep-open") closeModal();
   } catch (err) {
     errEl.textContent = err.message;
   }

@@ -11,7 +11,14 @@ compartilha banco de dados nem código com o gerador de vídeos.
 
 ## O que já está pronto (v0.1 — cadastros essenciais)
 
-- Login da equipe (JWT).
+- Login da equipe (JWT). Cadastro de novos usuários **desabilitado por
+  padrão** (`ALLOW_REGISTRATION=false` no `.env`) enquanto o app está em fase
+  de teste e acessível pela internet — ligue temporariamente no `.env` +
+  reinicie o serviço quando precisar criar um usuário novo.
+- **Esqueci minha senha**: gera um código de redefinição, mas como ainda não
+  há servidor de e-mail configurado, o código não é enviado por e-mail — fica
+  registrado no log da aplicação (`journalctl -u shalom-adm-api | grep
+  "Código de redefinição"`), visível só para quem tem acesso ao servidor.
 - **Proprietários**: dados pessoais, contato e dados bancários (para repasse).
 - **Inquilinos**: dados pessoais e contato.
 - **Imóveis**: endereço, tipo, valores de IPTU/condomínio, vinculado a um proprietário.

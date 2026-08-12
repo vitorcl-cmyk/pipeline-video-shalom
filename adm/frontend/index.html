@@ -20,11 +20,6 @@
       </div>
       <p class="subtitle">Administração de imóveis, proprietários, inquilinos e contratos</p>
 
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="login">Entrar</button>
-        <button class="tab-btn" data-tab="register">Criar conta</button>
-      </div>
-
       <form id="login-form">
         <label for="login-email">E-mail</label>
         <input id="login-email" type="email" required autocomplete="username" />
@@ -33,17 +28,7 @@
         <div class="error-msg" id="login-error"></div>
         <button class="btn" type="submit" style="margin-top:16px;width:100%;">Entrar</button>
       </form>
-
-      <form id="register-form" class="hidden">
-        <label for="reg-name">Nome completo</label>
-        <input id="reg-name" type="text" required />
-        <label for="reg-email">E-mail</label>
-        <input id="reg-email" type="email" required autocomplete="username" />
-        <label for="reg-password">Senha</label>
-        <input id="reg-password" type="password" required minlength="6" autocomplete="new-password" />
-        <div class="error-msg" id="register-error"></div>
-        <button class="btn" type="submit" style="margin-top:16px;width:100%;">Criar conta</button>
-      </form>
+      <button type="button" class="link-btn" id="forgot-password-btn">Esqueci minha senha</button>
     </div>
   </div>
 

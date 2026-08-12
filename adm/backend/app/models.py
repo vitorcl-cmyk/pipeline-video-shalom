@@ -72,6 +72,22 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
+class PasswordResetToken(Base):
+    """Código de redefinição de senha. Sem servidor de e-mail configurado
+    ainda, o código não é enviado por e-mail: fica registrado no log da
+    aplicação (journalctl -u shalom-adm-api), visível só pra quem tem
+    acesso ao servidor."""
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("adm_users.id"), nullable=False, index=True)
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 class Owner(Base):
     """Proprietário: dono de um ou mais imóveis administrados pela Shalom."""
 
