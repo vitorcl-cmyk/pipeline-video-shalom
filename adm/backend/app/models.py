@@ -48,6 +48,18 @@ class ReadjustmentIndex(str, enum.Enum):
     NENHUM = "nenhum"
 
 
+class DocumentoTipo(str, enum.Enum):
+    CPF = "cpf"
+    CNPJ = "cnpj"
+
+
+class ParecerFicha(str, enum.Enum):
+    PENDENTE = "pendente"
+    APROVADO = "aprovado"
+    APROVADO_COM_RESSALVAS = "aprovado_com_ressalvas"
+    REPROVADO = "reprovado"
+
+
 class ChargeKind(str, enum.Enum):
     FIXA = "fixa"
     VARIAVEL = "variavel"
@@ -339,3 +351,29 @@ class CaucaoCorrection(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     contract: Mapped["Contract"] = relationship("Contract", back_populates="caucao_correcoes")
+
+
+class AnaliseFicha(Base):
+    """Análise de ficha (triagem) de um candidato a inquilino por CPF/CNPJ —
+    consolida consultas gratuitas automáticas (cadastral de CNPJ, servidor
+    público federal/sanções) com dados inseridos manualmente (SPC/Serasa
+    pago, judicial via link do TJSP). Fica solta, sem vínculo com Inquilino:
+    a triagem acontece antes do candidato virar um Inquilino cadastrado."""
+
+    __tablename__ = "analises_ficha"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+
+    documento: Mapped[str] = mapped_column(String(14), nullable=False, index=True)
+    tipo_documento: Mapped[str] = mapped_column(Enum(DocumentoTipo), nullable=False)
+    nome_candidato: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    dados_cadastrais: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    dados_judiciais: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    dados_servidor: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    dados_spc: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    parecer_final: Mapped[str] = mapped_column(Enum(ParecerFicha), default=ParecerFicha.PENDENTE, nullable=False)
+    observacoes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

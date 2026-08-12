@@ -7,6 +7,8 @@ from app.models import (
     ChargeKind,
     ChargeLaunchStatus,
     ContractStatus,
+    DocumentoTipo,
+    ParecerFicha,
     PropertyStatus,
     PropertyType,
     ReadjustmentIndex,
@@ -439,3 +441,42 @@ class DashboardSummary(BaseModel):
     receita_administracao_mensal: float
     contas_variaveis_pendentes: int
     contratos_reajuste_proximo: int
+
+
+# ---------------------------------------------------------------------------
+# Análise de ficha (triagem de candidato a inquilino por CPF/CNPJ)
+# ---------------------------------------------------------------------------
+
+
+class NovaAnaliseRequest(BaseModel):
+    documento: str
+    nome_candidato: str | None = None
+
+
+class SpcDataRequest(BaseModel):
+    score: str | None = None
+    dividas: str | None = None
+    cheques_devolvidos: str | None = None
+    protestos: str | None = None
+    observacoes_spc: str | None = None
+
+
+class ParecerRequest(BaseModel):
+    parecer: ParecerFicha
+    observacoes: str | None = None
+
+
+class AnaliseFichaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    documento: str
+    tipo_documento: DocumentoTipo
+    nome_candidato: str | None
+    dados_cadastrais: dict | None
+    dados_judiciais: dict | None
+    dados_servidor: dict | None
+    dados_spc: dict | None
+    parecer_final: ParecerFicha
+    observacoes: str | None
+    created_at: datetime

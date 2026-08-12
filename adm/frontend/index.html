@@ -44,6 +44,7 @@
       <button class="nav-btn" data-page="tenants">🧾 Inquilinos</button>
       <button class="nav-btn" data-page="properties">🏢 Imóveis</button>
       <button class="nav-btn" data-page="contracts">📄 Contratos</button>
+      <button class="nav-btn" data-page="ficha">🔍 Análise de Ficha</button>
       <button class="nav-btn" data-page="users">🔑 Usuários</button>
       <div class="sidebar-footer">
         <div class="user-box" id="user-box"></div>
@@ -148,6 +149,71 @@
           <thead><tr><th>Data</th><th>Índice</th><th>%</th><th>Valor anterior</th><th>Valor novo</th></tr></thead>
           <tbody></tbody>
         </table></div></div>
+      </section>
+
+      <!-- Análise de ficha (triagem de candidato por CPF/CNPJ) -->
+      <section id="page-ficha" class="page hidden">
+        <div class="page-header">
+          <h1>Análise de Ficha</h1>
+        </div>
+        <div class="card">
+          <form id="ficha-new-form">
+            <div class="form-grid">
+              <div><label>CPF ou CNPJ *</label><input name="documento" required placeholder="Só números ou com pontuação" /></div>
+              <div><label>Nome do candidato</label><input name="nome_candidato" /></div>
+            </div>
+            <button class="btn" type="submit">Consultar</button>
+          </form>
+          <div class="error-msg" id="ficha-new-error"></div>
+        </div>
+
+        <h2 style="margin-top:24px;">Análises recentes</h2>
+        <div class="card"><div class="table-scroll"><table id="ficha-table">
+          <thead><tr><th>Documento</th><th>Candidato</th><th>Tipo</th><th>Parecer</th><th>Data</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div></div>
+      </section>
+
+      <!-- Análise de ficha — detalhe -->
+      <section id="page-ficha-detalhe" class="page hidden">
+        <div class="page-header">
+          <div>
+            <button class="btn secondary small" id="ficha-back-btn" style="margin-bottom:8px;">&larr; Voltar às análises</button>
+            <h1 id="ficha-detalhe-title">Análise</h1>
+          </div>
+          <button class="btn secondary" id="ficha-relatorio-btn">Ver relatório completo</button>
+        </div>
+        <div id="ficha-avisos"></div>
+        <div id="ficha-detalhe-cards"></div>
+
+        <h2 style="margin-top:24px;">Crédito / SPC (colar manualmente)</h2>
+        <div class="card">
+          <form id="ficha-spc-form">
+            <div class="form-grid">
+              <div><label>Score de crédito</label><input name="score" /></div>
+              <div><label>Dívidas</label><input name="dividas" /></div>
+              <div><label>Cheques devolvidos</label><input name="cheques_devolvidos" /></div>
+              <div><label>Protestos</label><input name="protestos" /></div>
+            </div>
+            <label>Observações</label><textarea name="observacoes_spc"></textarea>
+            <button class="btn" type="submit">Salvar dados SPC</button>
+          </form>
+        </div>
+
+        <h2 style="margin-top:24px;">Parecer final</h2>
+        <div class="card">
+          <form id="ficha-parecer-form">
+            <label>Parecer</label>
+            <select name="parecer">
+              <option value="pendente">Pendente</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="aprovado_com_ressalvas">Aprovado com ressalvas</option>
+              <option value="reprovado">Reprovado</option>
+            </select>
+            <label>Observações</label><textarea name="observacoes"></textarea>
+            <button class="btn" type="submit">Salvar parecer</button>
+          </form>
+        </div>
       </section>
 
       <!-- Users (equipe com acesso ao painel) -->

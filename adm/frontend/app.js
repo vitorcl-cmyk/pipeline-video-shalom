@@ -182,6 +182,7 @@ const PAGE_LOADERS = {
   tenants: loadTenants,
   properties: loadProperties,
   contracts: loadContracts,
+  ficha: loadFicha,
   users: loadUsers,
 };
 
@@ -1327,6 +1328,171 @@ async function applyCaucaoCorrection() {
 }
 
 document.getElementById("caucao-correction-btn").addEventListener("click", () => applyCaucaoCorrection());
+
+// ---------------------------------------------------------------------------
+// Análise de Ficha (triagem de candidato a inquilino por CPF/CNPJ)
+// ---------------------------------------------------------------------------
+
+const FICHA_PARECER_LABEL = {
+  pendente: ["Pendente", "muted"],
+  aprovado: ["Aprovado", "ok"],
+  aprovado_com_ressalvas: ["Com ressalvas", "warn"],
+  reprovado: ["Reprovado", "danger"],
+};
+
+function formatarDocumento(documento, tipo) {
+  const d = documento || "";
+  if (tipo === "cnpj") return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
+async function loadFicha() {
+  const analises = await api("/ficha");
+  state.fichas = analises;
+  const tbody = document.querySelector("#ficha-table tbody");
+  tbody.innerHTML = analises.length
+    ? analises.map((a) => `
+        <tr class="clickable-row" data-row-open="${a.id}">
+          <td>${formatarDocumento(a.documento, a.tipo_documento)}</td>
+          <td>${a.nome_candidato || "—"}</td>
+          <td>${a.tipo_documento.toUpperCase()}</td>
+          <td>${badge(FICHA_PARECER_LABEL[a.parecer_final] || [a.parecer_final, "muted"])}</td>
+          <td>${new Date(a.created_at).toLocaleDateString("pt-BR")}</td>
+          <td class="row-actions"><button class="btn secondary small" data-abrir="${a.id}">Abrir</button></td>
+        </tr>`).join("")
+    : `<tr><td colspan="6" class="empty-state">Nenhuma análise ainda. Digite um CPF ou CNPJ acima pra começar.</td></tr>`;
+
+  wireClickableRows(tbody, (id) => openFicha(id));
+  tbody.querySelectorAll("[data-abrir]").forEach((b) => b.addEventListener("click", () => openFicha(b.dataset.abrir)));
+}
+
+document.getElementById("ficha-new-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById("ficha-new-error");
+  errEl.textContent = "";
+  const fd = new FormData(e.target);
+  try {
+    const result = await api("/ficha", {
+      method: "POST",
+      body: { documento: fd.get("documento"), nome_candidato: formValue(fd, "nome_candidato") },
+    });
+    e.target.reset();
+    if (result.avisos && result.avisos.length) {
+      errEl.textContent = result.avisos.join(" | ");
+      errEl.style.color = "#a15c00";
+    }
+    await openFicha(result.analise_id);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.color = "";
+  }
+});
+
+function fichaCardHtml(analise) {
+  const cards = [];
+
+  if (analise.tipo_documento === "cnpj") {
+    const cad = analise.dados_cadastrais;
+    cards.push(`
+      <div class="card">
+        <strong>Dados cadastrais e societários</strong>
+        ${cad
+          ? `<p class="hint">Fonte: ${cad.fonte}</p>
+             <p>Razão social: <strong>${cad.razao_social || "—"}</strong></p>
+             <p>Nome fantasia: ${cad.nome_fantasia || "—"}</p>
+             <p>Situação cadastral: ${cad.situacao_cadastral || "—"}</p>
+             <p>Data de abertura: ${cad.data_abertura || "—"}</p>
+             <p>Sócios/QSA: ${(cad.socios || []).map((s) => s.nome).join(", ") || "—"}</p>`
+          : `<p class="hint">Não consultado (veja avisos acima).</p>`}
+      </div>`);
+  }
+
+  const jud = analise.dados_judiciais;
+  cards.push(`
+    <div class="card">
+      <strong>Situação judicial</strong>
+      ${jud
+        ? jud.cobertura_automatica
+          ? `<p>Processos encontrados: ${(jud.processos || []).length}</p>`
+          : `<p class="hint">Sem cobertura automática nacional gratuita.</p>
+             <p><a href="${jud.link_consulta_manual_tjsp}" target="_blank" rel="noopener">Consultar manualmente no TJSP &rarr;</a></p>
+             <p class="hint">${jud.observacao || ""}</p>`
+        : `<p class="hint">Não consultado.</p>`}
+    </div>`);
+
+  const serv = analise.dados_servidor;
+  cards.push(`
+    <div class="card">
+      <strong>Servidor público / sanções (Portal da Transparência)</strong>
+      ${serv
+        ? `<p>Servidor público federal: ${badge(serv.eh_servidor_federal ? ["SIM", "warn"] : ["não consta", "ok"])}</p>
+           <p>Sanção/impedimento (CEIS): ${badge((serv.sancoes && serv.sancoes.possui_sancao) ? ["SIM", "danger"] : ["não consta", "ok"])}</p>`
+        : `<p class="hint">Não consultado (veja avisos acima).</p>`}
+    </div>`);
+
+  return cards.join("");
+}
+
+async function openFicha(id) {
+  state.currentFichaId = id;
+  document.querySelectorAll(".page").forEach((p) => p.classList.add("hidden"));
+  document.getElementById("page-ficha-detalhe").classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+
+  const analise = await api(`/ficha/${id}`);
+  state.currentFicha = analise;
+  document.getElementById("ficha-detalhe-title").textContent =
+    `${analise.nome_candidato || "Análise"} — ${formatarDocumento(analise.documento, analise.tipo_documento)}`;
+  document.getElementById("ficha-avisos").innerHTML = "";
+  document.getElementById("ficha-detalhe-cards").innerHTML = fichaCardHtml(analise);
+
+  const spcForm = document.getElementById("ficha-spc-form");
+  const spc = analise.dados_spc || {};
+  for (const [key, value] of Object.entries(spc)) {
+    if (spcForm.elements[key]) spcForm.elements[key].value = value;
+  }
+
+  document.getElementById("ficha-parecer-form").elements["parecer"].value = analise.parecer_final;
+  document.getElementById("ficha-parecer-form").elements["observacoes"].value = analise.observacoes || "";
+}
+
+document.getElementById("ficha-back-btn").addEventListener("click", () => navigate("ficha"));
+
+document.getElementById("ficha-spc-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    score: formValue(fd, "score"),
+    dividas: formValue(fd, "dividas"),
+    cheques_devolvidos: formValue(fd, "cheques_devolvidos"),
+    protestos: formValue(fd, "protestos"),
+    observacoes_spc: formValue(fd, "observacoes_spc"),
+  };
+  const analise = await api(`/ficha/${state.currentFichaId}/spc`, { method: "POST", body: payload });
+  state.currentFicha = analise;
+  alert("Dados SPC salvos.");
+});
+
+document.getElementById("ficha-parecer-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = { parecer: fd.get("parecer"), observacoes: formValue(fd, "observacoes") };
+  const analise = await api(`/ficha/${state.currentFichaId}/parecer`, { method: "POST", body: payload });
+  state.currentFicha = analise;
+  alert("Parecer salvo.");
+});
+
+document.getElementById("ficha-relatorio-btn").addEventListener("click", async () => {
+  const texto = await api(`/ficha/${state.currentFichaId}/relatorio`);
+  openModal(
+    "Relatório completo",
+    `<pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;">${texto}</pre>`,
+    async () => {},
+    null,
+    "Fechar"
+  );
+  document.getElementById("modal-cancel").classList.add("hidden");
+});
 
 // ---------------------------------------------------------------------------
 // Users (equipe com acesso ao painel)

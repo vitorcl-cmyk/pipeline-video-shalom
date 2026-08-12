@@ -26,5 +26,10 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["*"]
 
+    # Análise de ficha (triagem CPF/CNPJ) — chave gratuita do Portal da
+    # Transparência (https://api.portaldatransparencia.gov.br). Sem ela, a
+    # consulta de servidor público/sanções é pulada com um aviso.
+    PORTAL_TRANSPARENCIA_TOKEN: str = ""
+
 
 settings = Settings()

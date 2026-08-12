@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, billing, charges, contracts, dashboard, owners, properties, tenants, users
+from app.routers import auth, billing, charges, contracts, dashboard, ficha, owners, properties, tenants, users
 
 logging.basicConfig(level=logging.INFO)
 
@@ -36,6 +36,7 @@ app.include_router(contracts.router)
 app.include_router(charges.router)
 app.include_router(billing.router)
 app.include_router(dashboard.router)
+app.include_router(ficha.router)
 
 
 @app.get("/health")

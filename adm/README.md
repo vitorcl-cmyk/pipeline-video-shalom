@@ -78,6 +78,20 @@ compartilha banco de dados nem código com o gerador de vídeos.
   percentual manualmente como alternativa, e a próxima execução automática
   recupera o período em atraso. Histórico completo de correções (fonte,
   percentual, valor anterior/novo) por contrato.
+- **Análise de Ficha (triagem de candidato a inquilino por CPF/CNPJ)**:
+  alternativa interna ao Detetive Alude. Digite um CPF ou CNPJ e o sistema
+  já consulta automaticamente o que é gratuito e legítimo — dados
+  cadastrais e societários (CNPJ, via BrasilAPI com fallback ReceitaWS) e
+  servidor público federal/sanções CEIS (CPF, via Portal da Transparência,
+  precisa de uma chave gratuita em `PORTAL_TRANSPARENCIA_TOKEN`) — e
+  organiza no mesmo relatório o que precisa ser colado manualmente (SPC/
+  Serasa pago) ou consultado à parte (judicial: não existe API nacional
+  gratuita por CPF/CNPJ, então o sistema gera o link direto de consulta do
+  TJSP em vez de fingir uma automação que não existe). Fecha com um
+  parecer final (aprovado / aprovado com ressalvas / reprovado) e um
+  relatório de texto pronto pra copiar. Fica solta, sem vínculo com um
+  Inquilino cadastrado — a triagem acontece antes do candidato virar
+  Inquilino no sistema.
 
 ## Estrutura
 
