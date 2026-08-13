@@ -9,20 +9,20 @@
 
   function checkOne(el) {
     const url = el.dataset.check;
-    el.classList.add("hub-status-checking");
+    el.classList.add("app-status-checking");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS);
 
     fetch(url, { mode: "no-cors", signal: controller.signal, cache: "no-store" })
       .then(() => {
-        el.classList.remove("hub-status-checking");
-        el.classList.add("hub-status-online");
+        el.classList.remove("app-status-checking");
+        el.classList.add("app-status-online");
         el.title = "Respondendo";
       })
       .catch(() => {
-        el.classList.remove("hub-status-checking");
-        el.classList.add("hub-status-offline");
+        el.classList.remove("app-status-checking");
+        el.classList.add("app-status-offline");
         el.title = "Sem resposta (rede pode estar bloqueando essa porta)";
       })
       .finally(() => clearTimeout(timer));

@@ -5,92 +5,253 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shalom — Meus Aplicativos</title>
 <link rel="icon" type="image/png" href="logo-icon.png" />
-<link rel="stylesheet" href="styles.css?v=3" />
+<style>
+  :root {
+    --cream: #f6efe4;
+    --cream-deep: #eee3d0;
+    --paper: #fffdf8;
+    --ink: #2c241c;
+    --ink-soft: #6b5f52;
+    --line: #e2d3b8;
+    --orange: #e8862e;
+    --orange-deep: #c76a1c;
+    --green: #4f9d6e;
+    --red: #c85a4a;
+    --amber: #d59a3c;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(232, 134, 46, 0.08), transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(232, 134, 46, 0.06), transparent 35%);
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 56px 24px 36px;
+  }
+
+  .hero img { width: 72px; height: auto; margin-bottom: 14px; }
+
+  .hero h1 {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .hero h1 span { color: var(--orange-deep); }
+
+  .hero p {
+    margin: 8px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 480px;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  .notice {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .notice strong { color: var(--ink); }
+
+  .app-list {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 12px 30px -18px rgba(44, 36, 28, 0.25);
+  }
+
+  .app-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s;
+  }
+
+  .app-row:last-child { border-bottom: none; }
+  .app-row:hover { background: var(--cream-deep); }
+
+  .app-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--ink-soft);
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+
+  .app-status-checking { background: var(--amber); opacity: 1; animation: pulse 1s infinite; }
+  .app-status-online { background: var(--green); opacity: 1; }
+  .app-status-offline { background: var(--red); opacity: 1; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .app-info { flex: 1; min-width: 0; }
+
+  .app-info h3 {
+    margin: 0 0 3px;
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .app-info p {
+    margin: 0;
+    font-size: 0.83rem;
+    color: var(--ink-soft);
+  }
+
+  .app-tag {
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .app-open {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--orange-deep);
+    white-space: nowrap;
+  }
+
+  .app-row:hover .app-open { color: var(--orange); }
+
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+  }
+
+  @media (max-width: 560px) {
+    .app-row { flex-wrap: wrap; }
+    .app-tag { order: 3; }
+  }
+</style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <img src="logo-icon.png" alt="Shalom" class="brand-icon" />
-    <span class="brand-text">SHALOM <span class="brand-text-sub">Aplicativos</span></span>
-  </div>
-</header>
+<div class="hero">
+  <img src="logo-icon.png" alt="Shalom" />
+  <h1>SHALOM <span>Aplicativos</span></h1>
+  <p>Acesso central às ferramentas do escritório.</p>
+</div>
 
 <main class="container">
 
-  <div class="card" style="margin-bottom: 4px;">
-    <p class="hint" style="margin:0;">
-      A bolinha em cada card mostra se o app está respondendo agora, a partir
-      deste dispositivo/rede. Portas fora do padrão (diferentes de 80/443)
-      costumam <strong>falhar em dados móveis (4G/5G)</strong> mesmo
-      funcionando normalmente no Wi-Fi — restrição da operadora, não do
-      servidor.
-    </p>
+  <div class="notice">
+    A bolinha em cada linha mostra se o app está respondendo agora, a partir
+    deste dispositivo/rede. <strong>Portas fora do padrão</strong> (diferentes
+    de 80/443) costumam falhar em <strong>dados móveis (4G/5G)</strong> mesmo
+    funcionando normalmente no Wi-Fi — restrição da operadora, não do
+    servidor.
   </div>
 
-  <div class="hub-grid">
+  <div class="app-list">
 
-    <a class="hub-card" href="http://vitor.serveftp.com:666/" target="_blank" rel="noopener">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="http://vitor.serveftp.com:666/"></span>
+    <a class="app-row" href="http://vitor.serveftp.com:666/" target="_blank" rel="noopener">
+      <span class="app-status" data-check="http://vitor.serveftp.com:666/"></span>
+      <div class="app-info">
         <h3>Shalom Reels</h3>
+        <p>Vídeos cinematográficos a partir de fotos de imóveis</p>
       </div>
-      <p>Vídeos cinematográficos a partir de fotos de imóveis</p>
-      <span class="hub-port">porta 666</span>
+      <span class="app-tag">porta 666</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
-    <a class="hub-card" href="http://vitor.serveftp.com:667/" target="_blank" rel="noopener">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="http://vitor.serveftp.com:667/"></span>
+    <a class="app-row" href="http://vitor.serveftp.com:667/" target="_blank" rel="noopener">
+      <span class="app-status" data-check="http://vitor.serveftp.com:667/"></span>
+      <div class="app-info">
         <h3>Imóveis Vendidos em SP</h3>
+        <p>Consulta dos últimos imóveis vendidos</p>
       </div>
-      <p>Consulta dos últimos imóveis vendidos</p>
-      <span class="hub-port">porta 667</span>
+      <span class="app-tag">porta 667</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
-    <a class="hub-card" href="http://vitor.serveftp.com:668/" target="_blank" rel="noopener">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="http://vitor.serveftp.com:668/"></span>
+    <a class="app-row" href="http://vitor.serveftp.com:668/" target="_blank" rel="noopener">
+      <span class="app-status" data-check="http://vitor.serveftp.com:668/"></span>
+      <div class="app-info">
         <h3>Automação Residencial</h3>
+        <p>Controle da automação da casa</p>
       </div>
-      <p>Controle da automação da casa</p>
-      <span class="hub-port">porta 668</span>
+      <span class="app-tag">porta 668</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
-    <a class="hub-card" href="http://vitor.serveftp.com:700/" target="_blank" rel="noopener">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="http://vitor.serveftp.com:700/"></span>
+    <a class="app-row" href="http://vitor.serveftp.com:700/" target="_blank" rel="noopener">
+      <span class="app-status" data-check="http://vitor.serveftp.com:700/"></span>
+      <div class="app-info">
         <h3>Revista Digital</h3>
+        <p>Anúncios imobiliários publicados</p>
       </div>
-      <p>Anúncios imobiliários publicados</p>
-      <span class="hub-port">porta 700</span>
+      <span class="app-tag">porta 700</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
-    <a class="hub-card" href="https://troops-off-secondary-psychiatry.trycloudflare.com/" target="_blank" rel="noopener">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="https://troops-off-secondary-psychiatry.trycloudflare.com/"></span>
+    <a class="app-row" href="https://troops-off-secondary-psychiatry.trycloudflare.com/" target="_blank" rel="noopener">
+      <span class="app-status" data-check="https://troops-off-secondary-psychiatry.trycloudflare.com/"></span>
+      <div class="app-info">
         <h3>Shalom ADM</h3>
+        <p>Painel administrativo</p>
       </div>
-      <p>Painel administrativo</p>
-      <span class="hub-port">link temporário (Cloudflare)</span>
+      <span class="app-tag">link temporário</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
-    <a class="hub-card" href="http://vitor.serveftp.com:666/admin.html">
-      <div class="hub-card-header">
-        <span class="hub-status" data-check="http://vitor.serveftp.com:666/admin.html"></span>
+    <a class="app-row" href="http://vitor.serveftp.com:666/admin.html">
+      <span class="app-status" data-check="http://vitor.serveftp.com:666/admin.html"></span>
+      <div class="app-info">
         <h3>Shalom Reels — Admin</h3>
+        <p>Usuários, logins e atividade do Reels</p>
       </div>
-      <p>Usuários, logins e atividade do Reels</p>
-      <span class="hub-port">porta 666</span>
+      <span class="app-tag">porta 666</span>
+      <span class="app-open">Abrir →</span>
     </a>
 
   </div>
 
 </main>
 
-<footer class="footer">
-  <p>Shalom — painel central de aplicativos</p>
-</footer>
+<footer>Shalom — painel central de aplicativos</footer>
 
 <script src="hub.js?v=1"></script>
 </body>
