@@ -117,7 +117,7 @@
 
   forgotPasswordBtn.addEventListener("click", () => {
     forgotPasswordMsg.textContent =
-      "Peça para um administrador redefinir sua senha na área de admin (/admin.html).";
+      "Peça para um administrador redefinir sua senha na área de admin (/painel).";
     forgotPasswordMsg.classList.remove("hidden");
   });
 

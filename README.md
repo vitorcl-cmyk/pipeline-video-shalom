@@ -16,6 +16,10 @@ backend/
     schemas.py      # Pydantic (request/response)
     config.py       # configurações via .env
     database.py     # engine/sessão SQLAlchemy
+  painel/          # painel de admin, servido pela própria API em /painel
+    index.html
+    admin.js
+    styles.css
   requirements.txt
   .env.example
 frontend/
@@ -140,6 +144,17 @@ sudo systemctl reload nginx
 3. Como o Nginx expõe a API em `/api/`, atualize `frontend/config.js` em
    produção para `API_BASE_URL: "/api"` (mesma origem do frontend, evita
    configurar CORS separadamente).
+
+### Painel de admin
+
+O painel de admin (`backend/painel/`) é servido diretamente pela API via
+`StaticFiles`, montado em `/painel`. Não depende do frontend nem de
+`config.js` -- as chamadas do `admin.js` usam caminhos relativos
+(`/admin/...`), sempre na mesma origem de onde `/painel` foi carregado.
+
+- Local: `http://localhost:8000/painel`
+- Produção (atrás do Nginx do `deploy/nginx.conf.example`, que expõe
+  `/painel` e `/admin/` diretamente na API): `https://reels.seudominio.com.br/painel`
 
 ### Observações de produção
 

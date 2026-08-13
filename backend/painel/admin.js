@@ -1,8 +1,9 @@
 // Painel de admin (login/atividade) do Shalom Reels.
+// Servido pela própria API (mount em /painel), então as chamadas usam
+// caminhos relativos -- sempre a mesma origem do backend.
 (function () {
   "use strict";
 
-  const API_BASE = window.APP_CONFIG.API_BASE_URL;
   const ADMIN_TOKEN_KEY = "reels_admin_token";
   let refreshTimer = null;
 
@@ -38,7 +39,7 @@
   }
 
   async function adminFetch(path) {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(path, {
       headers: { Authorization: `Bearer ${getToken()}` },
     });
     if (res.status === 401) {
@@ -81,7 +82,7 @@
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/admin/users/${userId}/reset-password`, {
+      const res = await fetch(`/admin/users/${userId}/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +164,7 @@
     showError("");
     const password = new FormData(loginForm).get("password");
     try {
-      const res = await fetch(`${API_BASE}/admin/login`, {
+      const res = await fetch("/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
