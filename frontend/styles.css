@@ -293,6 +293,66 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .admin-table tbody tr:last-child td { border-bottom: none; }
 .admin-table tbody tr:hover { background: var(--surface-2); }
 
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.hub-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.hub-card:hover { border-color: var(--brand-orange); transform: translateY(-2px); }
+
+.hub-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hub-card-header h3 { margin: 0; font-size: 1rem; }
+
+.hub-card p {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.hub-port {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.hub-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.hub-status-checking { background: var(--warning); animation: hub-pulse 1s infinite; }
+.hub-status-online { background: var(--success); }
+.hub-status-offline { background: var(--danger); }
+
+@keyframes hub-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .footer {
   text-align: center;
   padding: 20px;

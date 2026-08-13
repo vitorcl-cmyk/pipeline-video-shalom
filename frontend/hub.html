@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shalom — Meus Aplicativos</title>
+<link rel="icon" type="image/png" href="logo-icon.png" />
+<link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="logo-icon.png" alt="Shalom" class="brand-icon" />
+    <span class="brand-text">SHALOM <span class="brand-text-sub">Aplicativos</span></span>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="card" style="margin-bottom: 4px;">
+    <p class="hint" style="margin:0;">
+      A bolinha em cada card mostra se o app está respondendo agora, a partir
+      deste dispositivo/rede. Portas fora do padrão (diferentes de 80/443)
+      costumam <strong>falhar em dados móveis (4G/5G)</strong> mesmo
+      funcionando normalmente no Wi-Fi — restrição da operadora, não do
+      servidor.
+    </p>
+  </div>
+
+  <div class="hub-grid">
+
+    <a class="hub-card" href="http://vitor.serveftp.com:666/" target="_blank" rel="noopener">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="http://vitor.serveftp.com:666/"></span>
+        <h3>Shalom Reels</h3>
+      </div>
+      <p>Vídeos cinematográficos a partir de fotos de imóveis</p>
+      <span class="hub-port">porta 666</span>
+    </a>
+
+    <a class="hub-card" href="http://vitor.serveftp.com:667/" target="_blank" rel="noopener">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="http://vitor.serveftp.com:667/"></span>
+        <h3>Imóveis Vendidos em SP</h3>
+      </div>
+      <p>Consulta dos últimos imóveis vendidos</p>
+      <span class="hub-port">porta 667</span>
+    </a>
+
+    <a class="hub-card" href="http://vitor.serveftp.com:668/" target="_blank" rel="noopener">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="http://vitor.serveftp.com:668/"></span>
+        <h3>Automação Residencial</h3>
+      </div>
+      <p>Controle da automação da casa</p>
+      <span class="hub-port">porta 668</span>
+    </a>
+
+    <a class="hub-card" href="http://vitor.serveftp.com:700/" target="_blank" rel="noopener">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="http://vitor.serveftp.com:700/"></span>
+        <h3>Revista Digital</h3>
+      </div>
+      <p>Anúncios imobiliários publicados</p>
+      <span class="hub-port">porta 700</span>
+    </a>
+
+    <a class="hub-card" href="https://troops-off-secondary-psychiatry.trycloudflare.com/" target="_blank" rel="noopener">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="https://troops-off-secondary-psychiatry.trycloudflare.com/"></span>
+        <h3>Shalom ADM</h3>
+      </div>
+      <p>Painel administrativo</p>
+      <span class="hub-port">link temporário (Cloudflare)</span>
+    </a>
+
+    <a class="hub-card" href="http://vitor.serveftp.com:666/admin.html">
+      <div class="hub-card-header">
+        <span class="hub-status" data-check="http://vitor.serveftp.com:666/admin.html"></span>
+        <h3>Shalom Reels — Admin</h3>
+      </div>
+      <p>Usuários, logins e atividade do Reels</p>
+      <span class="hub-port">porta 666</span>
+    </a>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>Shalom — painel central de aplicativos</p>
+</footer>
+
+<script src="hub.js?v=1"></script>
+</body>
+</html>
