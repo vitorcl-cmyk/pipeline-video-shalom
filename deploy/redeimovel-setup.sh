@@ -88,23 +88,33 @@ nav{background:var(--primary);padding:0 24px;height:64px;display:flex;align-item
 .nav-actions{display:flex;align-items:center;gap:12px}
 .btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem}
 .btn-ghost:hover{border-color:#fff}
-/* Sem foto ainda: o gradiente abaixo é o placeholder do hero.
-   Quando tiver a imagem, troque por: background:linear-gradient(135deg,rgba(15,45,74,.85),rgba(26,74,114,.75)),url('sua-foto.jpg') center/cover; */
-.hero{background:linear-gradient(135deg,#0f2d4a,#1a4a72);padding:56px 24px 44px;text-align:center;color:#fff}
-.hero h1{font-size:2.2rem;font-weight:900;margin-bottom:12px}
+/* Foto de fundo do hero: coloque o arquivo em /var/www/redeimovel/hero.jpg
+   (mesma pasta do index.html). O gradiente quente abaixo garante a leitura
+   do texto por cima e foi escolhido pra combinar com a paleta da foto
+   (verde das plantas, terracota, madeira) em vez do azul frio do resto do site. */
+.hero{
+  background:
+    linear-gradient(160deg,rgba(22,28,16,.72) 0%,rgba(70,42,20,.42) 55%,rgba(18,24,14,.75) 100%),
+    url('hero.jpg') center 32%/cover no-repeat;
+  padding:72px 24px 64px;text-align:center;color:#fff;
+  border-radius:0 0 40px 40px;
+  box-shadow:0 24px 48px -24px rgba(20,20,10,.45);
+  position:relative;
+}
+.hero h1{font-size:2.3rem;font-weight:800;margin-bottom:12px;text-shadow:0 2px 16px rgba(0,0,0,.35)}
 .hero h1 em{color:var(--accent);font-style:normal}
-.hero p{color:rgba(255,255,255,.75);margin-bottom:28px}
-.search-card{background:#fff;border-radius:16px;max-width:760px;margin:0 auto;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;text-align:left}
-.tabs{display:flex;border-bottom:1px solid #eee}
-.tab{flex:0 0 auto;padding:14px 26px;border:none;background:none;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
-.tab.active{color:var(--primary);border-color:var(--accent)}
-.search-row{display:flex;flex-wrap:wrap}
-.search-row select,.search-row input{border:none;padding:16px;font-size:.92rem;flex:1;min-width:140px;outline:none;border-right:1px solid #eee;font-family:inherit;color:var(--text)}
-.search-row button{background:var(--accent);color:#fff;border:none;padding:16px 30px;font-weight:700;cursor:pointer;font-size:.92rem}
-.stats{display:flex;justify-content:center;gap:40px;margin-top:32px}
-.stat strong{display:block;font-size:1.8rem;font-weight:900;color:var(--accent)}
-.stat span{font-size:.8rem;color:rgba(255,255,255,.6)}
-.selo{background:#fff;border-bottom:3px solid var(--accent);padding:16px 24px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero p{color:rgba(255,255,255,.88);margin-bottom:30px;text-shadow:0 1px 8px rgba(0,0,0,.3)}
+.search-card{background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-radius:22px;max-width:760px;margin:0 auto;box-shadow:0 20px 50px -10px rgba(20,20,10,.4);overflow:hidden;text-align:left}
+.tabs{display:flex;gap:4px;padding:8px 8px 0}
+.tab{flex:0 0 auto;padding:12px 22px;border:none;background:none;border-radius:12px 12px 0 0;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer}
+.tab.active{color:var(--primary);background:rgba(0,196,154,.12)}
+.search-row{display:flex;flex-wrap:wrap;padding:4px}
+.search-row select,.search-row input{border:none;padding:16px;font-size:.92rem;flex:1;min-width:140px;outline:none;font-family:inherit;color:var(--text);border-radius:14px;background:transparent}
+.search-row button{background:var(--accent);color:#fff;border:none;padding:16px 30px;font-weight:700;cursor:pointer;font-size:.92rem;border-radius:14px;margin:4px}
+.stats{display:flex;justify-content:center;gap:40px;margin-top:34px}
+.stat strong{display:block;font-size:1.8rem;font-weight:900;color:var(--accent);text-shadow:0 1px 8px rgba(0,0,0,.3)}
+.stat span{font-size:.8rem;color:rgba(255,255,255,.75)}
+.selo{background:#fff;padding:16px 24px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-top:-16px;position:relative;border-radius:20px 20px 0 0}
 .selo-item{display:flex;align-items:center;gap:8px;font-size:.85rem}
 .sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}
 .carousel-nav{display:flex;gap:8px;flex:0 0 auto}
@@ -191,7 +201,7 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 </nav>
 
 <div class="hero">
-  <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,196,154,.15);border:1px solid rgba(0,196,154,.4);border-radius:20px;padding:5px 14px;font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:18px">✅ Corretores com CRECI Verificado</div>
+  <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,196,154,.25);backdrop-filter:blur(6px);border:1px solid rgba(0,196,154,.5);border-radius:20px;padding:5px 14px;font-size:.8rem;color:#fff;font-weight:600;margin-bottom:18px">✅ Corretores com CRECI Verificado</div>
   <h1>Encontre seu <em>imóvel</em></h1>
   <p>Todos os corretores têm CRECI ativo e avaliações reais de clientes</p>
   <div class="search-card">
@@ -467,3 +477,7 @@ echo "✅ Proxy Nido rodando em http://localhost:8765"
 echo ""
 echo "⚠️  Lembrete: Liberar porta 700 no roteador"
 echo "   Port Forwarding: 700 → 192.168.15.32:700 TCP"
+echo ""
+echo "🖼️  Falta a foto de fundo do hero: salve a imagem do casal como"
+echo "   hero.jpg e coloque em /var/www/redeimovel/hero.jpg (mesma pasta"
+echo "   do index.html). O CSS já está pronto pra usá-la."
