@@ -1,0 +1,156 @@
+# HTTPS (certificado real, Let's Encrypt) para os apps do escritorio,
+# em portas dedicadas = porta HTTP original + 1000. Mesmo hostname para
+# todos (apps.shalomconsultoria.com.br), um so certificado cobre tudo.
+#
+# Motivo de portas separadas em vez de reaproveitar as mesmas (666, 667...):
+# nginx nao consegue servir HTTP puro e HTTPS na mesma porta/socket ao
+# mesmo tempo -- e exatamente essa mistura (navegador tentando HTTPS numa
+# porta que so fala HTTP) que causava o ERR_SSL_PROTOCOL_ERROR no celular.
+#
+# ssl_certificate fica dentro de cada bloco (repetitivo, de proposito) em
+# vez de uma vez so no topo do arquivo -- assim fica isolado, sem virar
+# um default acidental pros outros sites (vitor.serveftp.com) incluidos
+# nesse mesmo nginx.
+
+# Shalom Reels -> 666 + 1000
+server {
+    listen 1666 ssl;
+    listen [::]:1666 ssl;
+    server_name apps.shalomconsultoria.com.br;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_certificate     /etc/letsencrypt/live/apps.shalomconsultoria.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/apps.shalomconsultoria.com.br/privkey.pem;
+
+    client_max_body_size 100M;
+
+    root /opt/reels-imobiliario/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    access_log /var/log/nginx/reels-imobiliario-ssl.access.log;
+    error_log  /var/log/nginx/reels-imobiliario-ssl.error.log;
+}
+
+# ITBI -> 667 + 1000
+server {
+    listen 1667 ssl;
+    listen [::]:1667 ssl;
+    server_name apps.shalomconsultoria.com.br;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_certificate     /etc/letsencrypt/live/apps.shalomconsultoria.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/apps.shalomconsultoria.com.br/privkey.pem;
+
+    client_max_body_size 200M;
+
+    root /var/www/itbi;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    resolver 127.0.0.53 1.1.1.1 valid=30s;
+
+    location /geoproxy/ {
+        set $geosampa_upstream wfs.geosampa.prefeitura.sp.gov.br;
+        proxy_pass http://$geosampa_upstream/geoserver/;
+        proxy_set_header Host wfs.geosampa.prefeitura.sp.gov.br;
+        proxy_set_header User-Agent "Mozilla/5.0 (compatible; itbi-app/1.0)";
+        proxy_hide_header Set-Cookie;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 20s;
+        limit_except GET { deny all; }
+    }
+
+    access_log /var/log/nginx/itbi-ssl.access.log;
+    error_log  /var/log/nginx/itbi-ssl.error.log;
+}
+
+# Automacao Residencial (Home Assistant) -> 668 + 1000
+server {
+    listen 1668 ssl;
+    listen [::]:1668 ssl;
+    server_name apps.shalomconsultoria.com.br;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_certificate     /etc/letsencrypt/live/apps.shalomconsultoria.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/apps.shalomconsultoria.com.br/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8123;
+        proxy_set_header Host $host;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# Shalom ADM -> 669 + 1000
+server {
+    listen 1669 ssl;
+    listen [::]:1669 ssl;
+    server_name apps.shalomconsultoria.com.br;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_certificate     /etc/letsencrypt/live/apps.shalomconsultoria.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/apps.shalomconsultoria.com.br/privkey.pem;
+
+    root /opt/shalom-adm/adm/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8010/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    access_log /var/log/nginx/shalom-adm-ssl.access.log;
+    error_log  /var/log/nginx/shalom-adm-ssl.error.log;
+}
+
+# Revista Digital (redeimovel) -> 700 + 1000
+server {
+    listen 1700 ssl;
+    listen [::]:1700 ssl;
+    server_name apps.shalomconsultoria.com.br;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_certificate     /etc/letsencrypt/live/apps.shalomconsultoria.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/apps.shalomconsultoria.com.br/privkey.pem;
+
+    root /var/www/redeimovel;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /nido-proxy {
+        proxy_pass http://127.0.0.1:8765;
+        add_header Access-Control-Allow-Origin *;
+    }
+}
