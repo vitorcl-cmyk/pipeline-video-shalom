@@ -81,18 +81,38 @@ body{font-family:'Segoe UI',sans-serif;color:var(--text);background:var(--light)
 nav{background:var(--primary);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{color:#fff;font-size:1.4rem;font-weight:800}.logo span{color:var(--accent)}
 .btn-nav{background:var(--accent);color:var(--primary);border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer}
-.hero{background:linear-gradient(135deg,#0f2d4a,#1a4a72);padding:60px 24px;text-align:center;color:#fff}
+.nav-menu{display:flex;gap:28px;list-style:none}
+.nav-menu a{color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:500}
+.nav-menu a:hover{color:#fff}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.btn-ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem}
+.btn-ghost:hover{border-color:#fff}
+/* Sem foto ainda: o gradiente abaixo é o placeholder do hero.
+   Quando tiver a imagem, troque por: background:linear-gradient(135deg,rgba(15,45,74,.85),rgba(26,74,114,.75)),url('sua-foto.jpg') center/cover; */
+.hero{background:linear-gradient(135deg,#0f2d4a,#1a4a72);padding:56px 24px 44px;text-align:center;color:#fff}
 .hero h1{font-size:2.2rem;font-weight:900;margin-bottom:12px}
 .hero h1 em{color:var(--accent);font-style:normal}
-.hero p{color:rgba(255,255,255,.75);margin-bottom:32px}
-.search-bar{background:#fff;border-radius:12px;display:flex;flex-wrap:wrap;overflow:hidden;max-width:800px;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
-.search-bar select,.search-bar input{border:none;padding:16px;font-size:.92rem;flex:1;min-width:130px;outline:none;border-right:1px solid #eee}
-.search-bar button{background:var(--accent);color:#fff;border:none;padding:16px 28px;font-weight:700;cursor:pointer}
-.stats{display:flex;justify-content:center;gap:40px;margin-top:36px}
+.hero p{color:rgba(255,255,255,.75);margin-bottom:28px}
+.search-card{background:#fff;border-radius:16px;max-width:760px;margin:0 auto;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;text-align:left}
+.tabs{display:flex;border-bottom:1px solid #eee}
+.tab{flex:0 0 auto;padding:14px 26px;border:none;background:none;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.tab.active{color:var(--primary);border-color:var(--accent)}
+.search-row{display:flex;flex-wrap:wrap}
+.search-row select,.search-row input{border:none;padding:16px;font-size:.92rem;flex:1;min-width:140px;outline:none;border-right:1px solid #eee;font-family:inherit;color:var(--text)}
+.search-row button{background:var(--accent);color:#fff;border:none;padding:16px 30px;font-weight:700;cursor:pointer;font-size:.92rem}
+.stats{display:flex;justify-content:center;gap:40px;margin-top:32px}
 .stat strong{display:block;font-size:1.8rem;font-weight:900;color:var(--accent)}
 .stat span{font-size:.8rem;color:rgba(255,255,255,.6)}
 .selo{background:#fff;border-bottom:3px solid var(--accent);padding:16px 24px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
 .selo-item{display:flex;align-items:center;gap:8px;font-size:.85rem}
+.cidades-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.cidade-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s}
+.cidade-card:hover{transform:translateY(-4px)}
+.cidade-img{height:110px;display:flex;align-items:center;justify-content:center;font-size:2.1rem;color:#fff}
+.cidade-body{padding:14px}
+.cidade-nome{font-weight:700;font-size:.95rem;margin-bottom:2px}
+.cidade-qtd{font-size:.78rem;color:var(--muted);margin-bottom:8px}
+.cidade-link{font-size:.78rem;color:var(--accent);font-weight:600}
 .section{padding:48px 24px;max-width:1200px;margin:0 auto}
 .sec-title{font-size:1.5rem;font-weight:800;color:var(--primary);margin-bottom:4px}
 .sec-title span{color:var(--accent)}
@@ -152,23 +172,40 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 
 <nav>
   <div class="logo">Rede<span>Imóvel</span></div>
-  <button class="btn-nav" onclick="openM('modal-an')">Anunciar</button>
+  <ul class="nav-menu">
+    <li><a href="#imoveis">Comprar</a></li>
+    <li><a href="#imoveis">Alugar</a></li>
+    <li><a href="#bairros">Bairros</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-ghost" onclick="openM('modal-ct')">Entrar</button>
+    <button class="btn-nav" onclick="openM('modal-an')">Anunciar</button>
+  </div>
 </nav>
 
 <div class="hero">
   <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,196,154,.15);border:1px solid rgba(0,196,154,.4);border-radius:20px;padding:5px 14px;font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:18px">✅ Corretores com CRECI Verificado</div>
-  <h1>Imóveis com<br><em>corretores de confiança</em></h1>
+  <h1>Encontre seu <em>imóvel</em></h1>
   <p>Todos os corretores têm CRECI ativo e avaliações reais de clientes</p>
-  <div class="search-bar">
-    <select><option>Tipo</option><option>Apartamento</option><option>Casa</option><option>Cobertura</option><option>Comercial</option><option>Terreno</option></select>
-    <input type="text" placeholder="Cidade, bairro ou endereço...">
-    <select><option>Finalidade</option><option>Comprar</option><option>Alugar</option></select>
-    <button>🔍 Buscar</button>
+  <div class="search-card">
+    <div class="tabs">
+      <button class="tab active" id="tab-venda" onclick="setTab('Venda')">Comprar</button>
+      <button class="tab" id="tab-locacao" onclick="setTab('Locação')">Alugar</button>
+    </div>
+    <div class="search-row">
+      <select id="f-tipo">
+        <option value="">Tipo</option>
+        <option>Apartamento</option>
+        <option>Comercial</option>
+      </select>
+      <input type="text" id="f-local" placeholder="Digite o bairro ou a cidade...">
+      <button onclick="buscar()">🔍 Buscar</button>
+    </div>
   </div>
   <div class="stats">
     <div class="stat"><strong id="tot-imoveis">--</strong><span>Imóveis</span></div>
     <div class="stat"><strong>✅</strong><span>CRECI Verificado</span></div>
-    <div class="stat"><strong>SP</strong><span>São Paulo</span></div>
+    <div class="stat"><strong id="tot-bairros">--</strong><span>Bairros atendidos</span></div>
   </div>
 </div>
 
@@ -179,7 +216,13 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
   <div class="selo-item">📊 <strong>Preço Justo</strong></div>
 </div>
 
-<div class="section">
+<div class="section" id="bairros">
+  <div class="sec-title">Bairros em <span>destaque</span></div>
+  <div class="sec-sub">Os bairros com mais imóveis disponíveis na RedeImóvel</div>
+  <div class="cidades-grid" id="bairros-grid"><div class="loading">⏳ Carregando bairros...</div></div>
+</div>
+
+<div class="section" id="imoveis">
   <div class="sec-title">Imóveis em <span>Destaque</span></div>
   <div class="sec-sub">Anunciados por corretores verificados da Shalom Consultoria</div>
   <div class="filtros">
@@ -255,7 +298,7 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 <script>
 const PROXY = 'http://vitor.serveftp.com:700/nido-proxy';
 const cores = [['#1a3c5e','#2a6090'],['#1a5e3c','#2a9060'],['#3c1a5e','#602a90'],['#5e3a1a','#906028'],['#1a4e5e','#2a7890'],['#5e1a3a','#902a60']];
-let todos = [], ativo = 'Todos';
+let todos = [], ativo = 'Todos', tabFin = 'Venda';
 
 fetch(PROXY).then(r => r.text()).then(txt => {
   const xml = new DOMParser().parseFromString(txt, 'text/xml');
@@ -283,9 +326,36 @@ fetch(PROXY).then(r => r.text()).then(txt => {
   });
   document.getElementById('tot-imoveis').textContent = todos.length + '+';
   render(todos);
+  renderBairros(todos);
 }).catch(e => {
   document.getElementById('cards').innerHTML = '<div class="loading">⚠️ ' + e.message + '</div>';
+  document.getElementById('bairros-grid').innerHTML = '<div class="loading">⚠️ ' + e.message + '</div>';
 });
+
+function renderBairros(lista) {
+  const porBairro = {};
+  lista.forEach(im => {
+    if (!im.bairro) return;
+    if (!porBairro[im.bairro]) porBairro[im.bairro] = { cidade: im.cidade, qtd: 0 };
+    porBairro[im.bairro].qtd++;
+  });
+  const top = Object.entries(porBairro).sort((a, b) => b[1].qtd - a[1].qtd).slice(0, 8);
+  document.getElementById('tot-bairros').textContent = Object.keys(porBairro).length + '+';
+  const grid = document.getElementById('bairros-grid');
+  if (!top.length) { grid.innerHTML = '<div class="loading">Nenhum bairro encontrado.</div>'; return; }
+  grid.innerHTML = '';
+  top.forEach(([bairro, info], i) => {
+    const cor = cores[i % cores.length];
+    grid.innerHTML += `<div class="cidade-card" onclick="buscarBairro('${bairro}')">
+      <div class="cidade-img" style="background:linear-gradient(135deg,${cor[0]},${cor[1]})">📍</div>
+      <div class="cidade-body">
+        <div class="cidade-nome">${bairro}</div>
+        <div class="cidade-qtd">${info.qtd} imóve${info.qtd === 1 ? 'l' : 'is'} — ${info.cidade}</div>
+        <span class="cidade-link">Ver imóveis em ${bairro} →</span>
+      </div>
+    </div>`;
+  });
+}
 
 function render(lista) {
   const c = document.getElementById('cards');
@@ -323,6 +393,32 @@ function filtrar(btn, tipo) {
   document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active'); ativo = tipo;
   render(tipo === 'Todos' ? todos : todos.filter(im => im.fin === tipo));
+}
+
+function setTab(fin) {
+  tabFin = fin;
+  document.getElementById('tab-venda').classList.toggle('active', fin === 'Venda');
+  document.getElementById('tab-locacao').classList.toggle('active', fin === 'Locação');
+}
+
+function buscar() {
+  const tipo = document.getElementById('f-tipo').value;
+  const local = document.getElementById('f-local').value.trim().toLowerCase();
+  aplicarFiltro(im => im.fin === tabFin
+    && (!tipo || im.tipo === tipo)
+    && (!local || im.bairro.toLowerCase().includes(local) || im.cidade.toLowerCase().includes(local)));
+}
+
+function buscarBairro(bairro) {
+  document.getElementById('f-local').value = bairro;
+  aplicarFiltro(im => im.bairro === bairro);
+}
+
+function aplicarFiltro(fn) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.fbtn').classList.add('active'); ativo = 'Todos';
+  render(todos.filter(fn));
+  document.getElementById('imoveis').scrollIntoView({ behavior: 'smooth' });
 }
 
 function openM(id) { document.getElementById(id).classList.add('open'); }
