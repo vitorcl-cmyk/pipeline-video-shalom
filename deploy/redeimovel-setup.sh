@@ -106,10 +106,15 @@ nav{background:var(--primary);padding:0 24px;height:64px;display:flex;align-item
 .stat span{font-size:.8rem;color:rgba(255,255,255,.6)}
 .selo{background:#fff;border-bottom:3px solid var(--accent);padding:16px 24px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
 .selo-item{display:flex;align-items:center;gap:8px;font-size:.85rem}
-.cidades-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
-.cidade-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}
+.carousel-nav{display:flex;gap:8px;flex:0 0 auto}
+.cnav{width:36px;height:36px;border-radius:50%;border:2px solid #dde3ec;background:#fff;color:var(--text);font-size:1.2rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cnav:hover{border-color:var(--accent);color:var(--accent)}
+.cidades-track{display:flex;gap:18px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding-bottom:4px}
+.cidades-track::-webkit-scrollbar{display:none}
+.cidade-card{flex:0 0 240px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s}
 .cidade-card:hover{transform:translateY(-4px)}
-.cidade-img{height:110px;display:flex;align-items:center;justify-content:center;font-size:2.1rem;color:#fff}
+.cidade-img{height:140px;display:flex;align-items:center;justify-content:center;font-size:2.1rem;color:#fff}
 .cidade-body{padding:14px}
 .cidade-nome{font-weight:700;font-size:.95rem;margin-bottom:2px}
 .cidade-qtd{font-size:.78rem;color:var(--muted);margin-bottom:8px}
@@ -118,6 +123,7 @@ nav{background:var(--primary);padding:0 24px;height:64px;display:flex;align-item
 .sec-title{font-size:1.5rem;font-weight:800;color:var(--primary);margin-bottom:4px}
 .sec-title span{color:var(--accent)}
 .sec-sub{color:var(--muted);font-size:.88rem;margin-bottom:24px}
+.sec-head .sec-sub{margin-bottom:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
 .card{background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.07);overflow:hidden;cursor:pointer;transition:transform .2s}
 .card:hover{transform:translateY(-4px)}
@@ -179,8 +185,8 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
     <li><a href="#bairros">Bairros</a></li>
   </ul>
   <div class="nav-actions">
-    <button class="btn-ghost" onclick="openM('modal-ct')">Entrar</button>
-    <button class="btn-nav" onclick="openM('modal-an')">Anunciar</button>
+    <button class="btn-ghost" onclick="openM('modal-an')">Anunciar</button>
+    <button class="btn-nav" onclick="openM('modal-ct')">Entrar</button>
   </div>
 </nav>
 
@@ -218,9 +224,17 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 </div>
 
 <div class="section" id="bairros">
-  <div class="sec-title">Bairros em <span>destaque</span></div>
-  <div class="sec-sub">Os bairros com mais imóveis disponíveis na RedeImóvel</div>
-  <div class="cidades-grid" id="bairros-grid"><div class="loading">⏳ Carregando bairros...</div></div>
+  <div class="sec-head">
+    <div>
+      <div class="sec-title">Bairros <span>populares</span></div>
+      <div class="sec-sub">Os bairros com mais imóveis disponíveis na RedeImóvel</div>
+    </div>
+    <div class="carousel-nav">
+      <button class="cnav" onclick="scrollBairros(-1)" aria-label="Anterior">‹</button>
+      <button class="cnav" onclick="scrollBairros(1)" aria-label="Próximo">›</button>
+    </div>
+  </div>
+  <div class="cidades-track" id="bairros-grid"><div class="loading">⏳ Carregando bairros...</div></div>
 </div>
 
 <div class="section" id="imoveis">
@@ -332,6 +346,10 @@ fetch(PROXY).then(r => r.text()).then(txt => {
   document.getElementById('cards').innerHTML = '<div class="loading">⚠️ ' + e.message + '</div>';
   document.getElementById('bairros-grid').innerHTML = '<div class="loading">⚠️ ' + e.message + '</div>';
 });
+
+function scrollBairros(dir) {
+  document.getElementById('bairros-grid').scrollBy({ left: dir * 260, behavior: 'smooth' });
+}
 
 function renderBairros(lista) {
   const porBairro = {};
