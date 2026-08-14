@@ -3,7 +3,9 @@
 # RedeImóvel — Setup completo
 # Servidor: apps.shalomconsultoria.com.br
 # IP interno: 192.168.15.32
-# Porta: 80
+# Porta: 1666 (hub existente com vários apps — este script NÃO cria o
+# server block, só adiciona a RedeImóvel como mais um app do hub)
+# URL final: https://apps.shalomconsultoria.com.br:1666/redeimovel
 # ============================================================
 
 # 1. PROXY NIDO (Python - porta 8765)
@@ -44,28 +46,28 @@ systemctl daemon-reload
 systemctl enable proxy-nido
 systemctl restart proxy-nido
 
-# 3. NGINX - configuração
-cat > /etc/nginx/sites-available/redeimovel << 'EOF'
-server {
-    listen 80;
-    server_name apps.shalomconsultoria.com.br;
-    root /var/www/redeimovel;
+# 3. NGINX - snippet da RedeImóvel dentro do hub existente (porta 1666)
+# Isso NÃO cria um server block novo — o hub.html e a porta 1666 já
+# existem. Este snippet só registra o caminho /redeimovel dentro dele.
+mkdir -p /etc/nginx/snippets
+cat > /etc/nginx/snippets/redeimovel.conf << 'EOF'
+location /redeimovel/ {
+    alias /var/www/redeimovel/;
     index index.html;
+    try_files $uri $uri/ =404;
+}
 
-    location / {
-        try_files $uri $uri/ =404;
-    }
+location = /redeimovel {
+    return 301 /redeimovel/;
+}
 
-    location /nido-proxy {
-        proxy_pass http://127.0.0.1:8765;
-        add_header Access-Control-Allow-Origin *;
-    }
+location /redeimovel/nido-proxy {
+    proxy_pass http://127.0.0.1:8765;
+    add_header Access-Control-Allow-Origin *;
 }
 EOF
 
 mkdir -p /var/www/redeimovel
-ln -sf /etc/nginx/sites-available/redeimovel /etc/nginx/sites-enabled/redeimovel
-nginx -t && systemctl reload nginx
 
 # 4. HTML DO SITE
 cat > /var/www/redeimovel/index.html << 'HTMLEOF'
@@ -297,7 +299,7 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 </div>
 
 <script>
-const PROXY = '/nido-proxy';
+const PROXY = 'nido-proxy';
 const cores = [['#1a3c5e','#2a6090'],['#1a5e3c','#2a9060'],['#3c1a5e','#602a90'],['#5e3a1a','#906028'],['#1a4e5e','#2a7890'],['#5e1a3a','#902a60']];
 let todos = [], ativo = 'Todos', tabFin = 'Venda';
 
@@ -444,11 +446,16 @@ function calcP(el) {
 </html>
 HTMLEOF
 
-echo "✅ RedeImóvel instalado em http://apps.shalomconsultoria.com.br"
+echo "✅ Arquivos da RedeImóvel prontos em /var/www/redeimovel"
 echo "✅ Proxy Nido rodando em http://localhost:8765"
+echo "✅ Snippet nginx gerado em /etc/nginx/snippets/redeimovel.conf"
 echo ""
-echo "⚠️  Lembrete:"
-echo "   1. Apontar o DNS de apps.shalomconsultoria.com.br para o IP público deste servidor"
-echo "   2. Liberar a porta 80 no roteador — Port Forwarding: 80 → 192.168.15.32:80 TCP"
-echo "   3. Depois de confirmar que o site abre em HTTP, rodar certbot para ativar HTTPS:"
-echo "      sudo apt install certbot python3-certbot-nginx && sudo certbot --nginx -d apps.shalomconsultoria.com.br"
+echo "⚠️  Falta 1 passo manual (não faço isso automaticamente pra não mexer"
+echo "   na config do hub que já está rodando na porta 1666):"
+echo "   Abra o arquivo de configuração do server block que já serve o"
+echo "   hub.html na porta 1666 e adicione, dentro do bloco 'server { ... }':"
+echo "       include /etc/nginx/snippets/redeimovel.conf;"
+echo "   Depois rode:"
+echo "       nginx -t && systemctl reload nginx"
+echo ""
+echo "🔗 URL final: https://apps.shalomconsultoria.com.br:1666/redeimovel"
