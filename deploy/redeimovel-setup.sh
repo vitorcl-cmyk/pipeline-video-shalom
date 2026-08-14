@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================================
 # RedeImóvel — Setup completo
-# Servidor: vitor.serveftp.com
+# Servidor: apps.shalomconsultoria.com.br
 # IP interno: 192.168.15.32
-# Porta: 700
+# Porta: 80
 # ============================================================
 
 # 1. PROXY NIDO (Python - porta 8765)
@@ -44,10 +44,11 @@ systemctl daemon-reload
 systemctl enable proxy-nido
 systemctl restart proxy-nido
 
-# 3. NGINX - configuração porta 700
+# 3. NGINX - configuração
 cat > /etc/nginx/sites-available/redeimovel << 'EOF'
 server {
-    listen 700;
+    listen 80;
+    server_name apps.shalomconsultoria.com.br;
     root /var/www/redeimovel;
     index index.html;
 
@@ -296,7 +297,7 @@ footer{background:#081a2c;color:rgba(255,255,255,.45);text-align:center;padding:
 </div>
 
 <script>
-const PROXY = 'http://vitor.serveftp.com:700/nido-proxy';
+const PROXY = '/nido-proxy';
 const cores = [['#1a3c5e','#2a6090'],['#1a5e3c','#2a9060'],['#3c1a5e','#602a90'],['#5e3a1a','#906028'],['#1a4e5e','#2a7890'],['#5e1a3a','#902a60']];
 let todos = [], ativo = 'Todos', tabFin = 'Venda';
 
@@ -443,8 +444,11 @@ function calcP(el) {
 </html>
 HTMLEOF
 
-echo "✅ RedeImóvel instalado em http://vitor.serveftp.com:700"
+echo "✅ RedeImóvel instalado em http://apps.shalomconsultoria.com.br"
 echo "✅ Proxy Nido rodando em http://localhost:8765"
 echo ""
-echo "⚠️  Lembrete: Liberar porta 700 no roteador"
-echo "   Port Forwarding: 700 → 192.168.15.32:700 TCP"
+echo "⚠️  Lembrete:"
+echo "   1. Apontar o DNS de apps.shalomconsultoria.com.br para o IP público deste servidor"
+echo "   2. Liberar a porta 80 no roteador — Port Forwarding: 80 → 192.168.15.32:80 TCP"
+echo "   3. Depois de confirmar que o site abre em HTTP, rodar certbot para ativar HTTPS:"
+echo "      sudo apt install certbot python3-certbot-nginx && sudo certbot --nginx -d apps.shalomconsultoria.com.br"
